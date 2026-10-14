@@ -1,0 +1,359 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   نظام الثيمات: "داكن" (افتراضي) و "دافئ"
+   - كل الألوان والظلال معرّفة كـ CSS Variables تتبدّل حسب data-theme
+   - قيم الثيم الداكن = الهوية الحالية تماماً (لا يتغيّر شيء بصرياً)
+   - Tailwind config يقرأ هذه المتغيّرات، ومعاملات الشفافية تعمل بلا انكسار
+   ========================================================= */
+
+/* ===== الثيم الداكن (الافتراضي) ===== */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* ألوان صلبة (تُستخدم كما هي) */
+  --c-dark-bg: #0a0a12;
+  --c-dark-card: rgba(20, 20, 35, 0.6);
+  --c-dark-header: rgba(15, 15, 26, 0.85);
+  --c-border: rgba(139, 92, 246, 0.15);
+  --c-bg: #0a0a12;
+  --c-card-bg: rgba(20, 20, 35, 0.6);
+  --c-header-bg: rgba(15, 15, 26, 0.85);
+  --c-dock-bg: rgba(15, 15, 26, 0.85);
+  --c-sticky-bg: rgba(15, 15, 26, 0.85);
+  --c-card: rgba(20, 20, 35, 0.6);
+
+  /* ألوان بقنوات RGB (تدعم معامل الشفافية /xx) */
+  --c-primary: 124 58 237;
+  --c-primary-light: 139 92 246;
+  --c-primary-glow: 167 139 250;
+  --c-accent: 167 139 250;
+  --c-text-primary: 244 242 248;
+  --c-text-secondary: 231 229 238;
+  --c-text-muted: 169 166 188;
+  --c-text-dark: 107 104 128;
+  --c-text-main: 231 229 238;
+  --c-border-glow: 139 92 246;
+  --c-border-dark: 139 92 246;
+  --c-dark-surface: 15 15 26;
+  --c-soft-blue: 45 45 70;
+  --c-soft-beige: 26 26 46;
+  --c-dark-gray: 231 229 238;
+
+  /* الظلال */
+  --sh-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --sh-md: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(139, 92, 246, 0.06);
+  --sh-lg: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 18px rgba(139, 92, 246, 0.08);
+  --sh-xl: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 26px rgba(139, 92, 246, 0.1);
+  --sh-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --sh-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.05);
+  --sh-card-hover: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.1);
+  --sh-button: 0 4px 20px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.2);
+  --sh-button-hover: 0 8px 30px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3);
+  --sh-glow: 0 0 20px rgba(139, 92, 246, 0.3);
+  --sh-glow-strong: 0 0 40px rgba(139, 92, 246, 0.5);
+
+  /* خلفية الجسم (تدرّج داكن عميق مع توهّج علوي) */
+  --body-bg:
+    radial-gradient(1100px 620px at 50% -12%, rgba(124, 58, 237, 0.2), rgba(124, 58, 237, 0) 62%),
+    radial-gradient(ellipse at top, #1a1a2e 0%, #0f0f1a 50%, #0a0a12 100%);
+  --body-color: #ece9f2;
+}
+
+/* ===== الثيم الدافئ (بيج/بني/ذهبي) ===== */
+[data-theme='warm'] {
+  color-scheme: light;
+
+  --c-dark-bg: #e8dfd0;
+  --c-dark-card: rgba(240, 232, 228, 0.75);
+  --c-dark-header: rgba(232, 223, 208, 0.85);
+  --c-border: rgba(184, 149, 106, 0.3);
+  --c-bg: #e8dfd0;
+  --c-card-bg: rgba(240, 232, 228, 0.75);
+  --c-header-bg: rgba(232, 223, 208, 0.85);
+  --c-dock-bg: rgba(232, 223, 208, 0.85);
+  --c-sticky-bg: rgba(232, 223, 208, 0.85);
+  --c-card: rgba(240, 232, 228, 0.75);
+
+  --c-primary: 184 149 106;
+  --c-primary-light: 201 168 124;
+  --c-primary-glow: 212 184 142;
+  --c-accent: 184 149 106;
+  --c-text-primary: 61 50 38;
+  --c-text-secondary: 92 74 58;
+  --c-text-muted: 139 125 107;
+  --c-text-dark: 61 50 38;
+  --c-text-main: 92 74 58;
+  --c-border-glow: 184 149 106;
+  --c-border-dark: 184 149 106;
+  --c-dark-surface: 232 223 208;
+  --c-soft-blue: 232 223 208;
+  --c-soft-beige: 240 232 228;
+  --c-dark-gray: 61 50 38;
+
+  --sh-sm: 0 2px 8px rgba(139, 115, 85, 0.1);
+  --sh-md: 0 4px 16px rgba(139, 115, 85, 0.12);
+  --sh-lg: 0 8px 32px rgba(139, 115, 85, 0.12);
+  --sh-xl: 0 20px 50px rgba(139, 115, 85, 0.15);
+  --sh-2xl: 0 25px 50px -12px rgba(139, 115, 85, 0.18);
+  --sh-card: 0 8px 32px rgba(139, 115, 85, 0.12);
+  --sh-card-hover: 0 12px 40px rgba(139, 115, 85, 0.18);
+  --sh-button: 0 4px 16px rgba(184, 149, 106, 0.35);
+  --sh-button-hover: 0 8px 24px rgba(184, 149, 106, 0.45);
+  --sh-glow: 0 0 20px rgba(184, 149, 106, 0.25);
+  --sh-glow-strong: 0 0 40px rgba(184, 149, 106, 0.35);
+
+  --body-bg: linear-gradient(135deg, #F0E8E4 0%, #E8DFD0 50%, #E5DCC8 100%);
+  --body-color: #4A3F35;
+}
+
+@layer base {
+  body {
+    @apply font-arabic antialiased;
+    background: var(--body-bg);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--body-color);
+  }
+}
+
+/* حاوية الموقع الرئيسية: تتبع خلفية الثيم الحالي */
+.site-bg {
+  background: var(--body-bg);
+  background-attachment: fixed;
+}
+
+/* ===== الزجاج الداكن (Dark Glassmorphism) ===== */
+
+/* بطاقة زجاجية — تُستخدم في PropertyCard وبطاقات لوحة التحكم */
+[data-theme='dark'] .glass-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 38%),
+    rgba(20, 20, 35, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+[data-theme='dark'] .glass-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.1);
+}
+[data-theme='warm'] .glass-card {
+  background: rgba(240, 232, 228, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(184, 149, 106, 0.3);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(139, 115, 85, 0.12);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+[data-theme='warm'] .glass-card:hover {
+  box-shadow: 0 12px 40px rgba(139, 115, 85, 0.18);
+}
+
+/* هيدر/شريط زجاجي — blur أقوى مع حد سفلي */
+[data-theme='dark'] .glass-header {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 60%),
+    rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+[data-theme='warm'] .glass-header {
+  background: rgba(232, 223, 208, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(184, 149, 106, 0.25);
+  box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+}
+
+/* تأثير الزجاج العام */
+[data-theme='dark'] .glass-effect {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 45%),
+    rgba(20, 20, 35, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+[data-theme='warm'] .glass-effect {
+  background: rgba(240, 232, 228, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(184, 149, 106, 0.3);
+}
+
+/* ===== الأزرار ===== */
+
+[data-theme='dark'] .btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+  color: #faf9fd;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  transition: all 0.3s ease;
+}
+[data-theme='dark'] .btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3);
+}
+[data-theme='warm'] .btn-primary {
+  background: linear-gradient(135deg, #B8956A 0%, #C9A87C 50%, #D4B88E 100%);
+  color: #FFFFFF;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
+  border: 1px solid rgba(201, 168, 124, 0.4);
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+[data-theme='warm'] .btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(184, 149, 106, 0.45);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  transform: none;
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: rgba(30, 30, 50, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
+  border-radius: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+[data-theme='dark'] .btn-secondary:hover {
+  background: rgba(40, 40, 65, 0.8);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+[data-theme='warm'] .btn-secondary {
+  background: rgba(245, 237, 226, 0.6);
+  border: 1px solid rgba(184, 149, 106, 0.35);
+  color: #8B6F47;
+  border-radius: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+[data-theme='warm'] .btn-secondary:hover {
+  background: rgba(245, 237, 226, 0.9);
+  border-color: rgba(184, 149, 106, 0.6);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+}
+
+/* ===== حقول الإدخال ===== */
+
+[data-theme='dark'] .input-dark {
+  background: rgba(20, 20, 35, 0.6);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 1rem;
+  color: #e7e5ee;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+[data-theme='dark'] .input-dark:focus {
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  outline: none;
+}
+[data-theme='dark'] .input-dark::placeholder {
+  color: #9ca3af;
+}
+[data-theme='warm'] .input-dark {
+  background: rgba(240, 232, 228, 0.7);
+  border: 1px solid rgba(184, 149, 106, 0.3);
+  border-radius: 1rem;
+  color: #4A3F35;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+[data-theme='warm'] .input-dark:focus {
+  border-color: rgba(184, 149, 106, 0.6);
+  box-shadow: 0 0 16px rgba(184, 149, 106, 0.2);
+  outline: none;
+}
+[data-theme='warm'] .input-dark::placeholder {
+  color: #8B7D6B;
+}
+
+/* ===== النصوص ===== */
+
+[data-theme='dark'] .text-heading {
+  color: #f4f2f8;
+  font-weight: 700;
+}
+[data-theme='warm'] .text-heading {
+  color: #3d3226;
+  font-weight: 700;
+}
+[data-theme='dark'] .text-subheading {
+  color: #a78bfa;
+  font-weight: 600;
+}
+[data-theme='warm'] .text-subheading {
+  color: #8B6F47;
+  font-weight: 600;
+}
+[data-theme='dark'] .text-body {
+  color: #e7e5ee;
+  font-weight: 400;
+}
+[data-theme='warm'] .text-body {
+  color: #5c4a3a;
+  font-weight: 400;
+}
+[data-theme='dark'] .text-muted-custom {
+  color: #a9a6bc;
+  font-weight: 300;
+}
+[data-theme='warm'] .text-muted-custom {
+  color: #8b7d6b;
+  font-weight: 300;
+}
+
+/* ===== تأثيرات التوهج (Glow) ===== */
+
+[data-theme='dark'] .glow-effect {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+[data-theme='warm'] .glow-effect {
+  box-shadow: 0 0 20px rgba(184, 149, 106, 0.25);
+}
+[data-theme='dark'] .glow-strong {
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+}
+[data-theme='warm'] .glow-strong {
+  box-shadow: 0 0 40px rgba(139, 115, 85, 0.3);
+}
+
+/* ===== خط ضوئي تحت الـ Header ===== */
+
+[data-theme='dark'] .header-glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(139, 92, 246, 0.5) 50%, transparent 100%);
+}
+[data-theme='warm'] .header-glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(184, 149, 106, 0.5) 50%, transparent 100%);
+}
+
+@layer utilities {
+  /* إخفاء شريط التمرير الأفقي مع الحفاظ على إمكانية السحب (scroll-snap) */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}

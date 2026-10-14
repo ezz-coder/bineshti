@@ -1,0 +1,21 @@
+# تبعيات المشروع
+node_modules/
+
+# متغيرات البيئة
+.env
+
+# قاعدة البيانات
+db/*.db
+db/*.db-journal
+db/*.db-wal
+db/*.db-shm
+
+# الصور المرفوعة
+uploads/*
+!uploads/.gitkeep
+
+# ملفات النظام والسجلات
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

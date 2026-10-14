@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Local env files (SECRETS - never commit)
+.env
+.env.local
+.env.*.local
+*.local
+
+# Database (contains real data - never commit)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+
+# OS / temp
+Thumbs.db
+_*.txt
+_dump*.txt
+build_log.txt
+theme_check.txt
+
