@@ -1,8 +1,8 @@
 const path = require('path');
 const fs = require('fs');
 
-// مسار مجلد الرفع المطلق
-const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
+// مسار مجلد الرفع المطلق (قابل للتجاوز عبر UPLOADS_DIR حتى يعيش على الـ Volume في Railway)
+const UPLOAD_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
 
 /**
  * بناء قائمة مسارات الصور من:

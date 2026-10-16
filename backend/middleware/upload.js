@@ -4,8 +4,8 @@ const multer = require('multer');
 const sharp = require('sharp');
 const { UPLOAD_CONFIG } = require('../config/constants');
 
-// مجلد تخزين الصور
-const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
+// مجلد تخزين الصور (قابل للتجاوز عبر UPLOADS_DIR حتى يعيش على الـ Volume في Railway)
+const UPLOAD_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
 
 // التأكد من وجود مجلد الرفع
 if (!fs.existsSync(UPLOAD_DIR)) {

@@ -3,7 +3,8 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 
-// مسار ملف قاعدة البيانات: مطلق من __dirname حتى يعمل بغض النظر عن مجلد العمل (Railway يشغّل من الجذر)
+// مسار ملف قاعدة البيانات: مطلق من متغير البيئة (على الـ Volume في Railway) أو مجلد db محلياً.
+// ملاحظة: لا تضع DATABASE_PATH داخل مجلد الكود (مثل backend/db) إن كان Volume مربوطاً عليه،
 const DB_PATH =
   process.env.DATABASE_PATH || path.join(__dirname, 'realEstate.db');
 
