@@ -14,11 +14,45 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-// إنشاء/فتح الاتصال بقاعدة البيانات
-const db = new Database(DB_PATH);
+// إنشاء/فتح الاتصال بقاعدة البيانات (مع تنظيف ملفات WAL التالفة التي قد تسقط العملية)
+function removeSidecars(p) {
+  ['-wal', '-shm', '-journal'].forEach((suffix) => {
+    try {
+      const sidecar = p + suffix;
+      if (fs.existsSync(sidecar)) fs.unlinkSync(sidecar);
+    } catch (e) { /* تجاهل */ }
+  });
+}
+
+function openDatabase(p) {
+  try {
+    return new Database(p);
+  } catch (err) {
+    // ملف تالف: انقله لنسخة احتياطية وافتح قاعدة جديدة نظيفة
+    console.error('⚠️ فشل فتح قاعدة البيانات، سيتم إنشاء نسخة جديدة:', err.message);
+    try {
+      const backup = p + '.corrupt-' + Date.now() + '.bak';
+      if (fs.existsSync(p)) fs.renameSync(p, backup);
+    } catch (e) { /* تجاهل */ }
+    removeSidecars(p);
+    return new Database(p);
+  }
+}
+
+removeSidecars(DB_PATH);
+const db = openDatabase(DB_PATH);
 
 // تحسين الأداء والموثوقية
-db.pragma('journal_mode = WAL');
+// ملاحظة: وضع WAL يستخدم mmap وقد يسقط على أنظمة bind-mount (مثل Railway Volumes)،
+// لذلك نحاول WAL ونسقط تلقائياً لوضع DELETE الآمن.
+try {
+  const wal = db.pragma('journal_mode = WAL');
+  if (!wal || String(wal[0] && wal[0].journal_mode).toLowerCase() !== 'wal') {
+    db.pragma('journal_mode = DELETE');
+  }
+} catch (e) {
+  try { db.pragma('journal_mode = DELETE'); } catch (e2) { /* تجاهل */ }
+}
 db.pragma('foreign_keys = ON');
 
 /**
