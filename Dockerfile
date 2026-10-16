@@ -35,4 +35,4 @@ EXPOSE 5000
 
 ENTRYPOINT ["/app/backend/entrypoint.sh"]
 
-CMD ["node", "backend/server.js"]
+CMD ["node", "backend/diag2.js"]
