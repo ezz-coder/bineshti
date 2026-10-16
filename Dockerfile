@@ -28,11 +28,12 @@ RUN mkdir -p /data/uploads
 RUN sed -i 's/\r$//' backend/entrypoint.sh && chmod +x backend/entrypoint.sh
 
 ENV NODE_ENV=production \
-    DATABASE_PATH=/data/realEstate.db \
     UPLOADS_DIR=/data/uploads
+
+VOLUME ["/data/uploads"]
 
 EXPOSE 5000
 
 ENTRYPOINT ["/app/backend/entrypoint.sh"]
 
-CMD ["node", "backend/diag2.js"]
+CMD ["node", "backend/server.js"]

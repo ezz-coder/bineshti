@@ -3,10 +3,10 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 
-// مسار ملف قاعدة البيانات: مطلق من متغير البيئة (على الـ Volume في Railway) أو مجلد db محلياً.
-// ملاحظة: لا تضع DATABASE_PATH داخل مجلد الكود (مثل backend/db) إن كان Volume مربوطاً عليه،
-const DB_PATH =
-  process.env.DATABASE_PATH || path.join(__dirname, 'realEstate.db');
+// مسار ملف قاعدة البيانات: داخل مجلد الكود (backend/db) — لا تضعها على الـ Volume.
+// السبب: الـ bind-mount في Railway يغطي الملفات وقت الإقلاع ويعطب القاعدة،
+// فيسقط السيرفر (segfault) لحظة فتحها. الصور فقط تعيش على الـ Volume عبر UPLOADS_DIR.
+const DB_PATH = path.join(__dirname, 'realEstate.db');
 
 // التأكد من وجود مجلد قاعدة البيانات
 const dbDir = path.dirname(DB_PATH);
