@@ -50,6 +50,18 @@ app.use('/api/search', searchRoutes);
 app.use('/api/featured', featuredRoutes);
 app.use('/api/admin', adminRoutes);
 
+// مسارات /api غير المطابقة تُرجع JSON دائماً (حتى في الإنتاج)
+app.use('/api', notFoundHandler);
+
+// خدمة ملفات الـ Frontend في بيئة الإنتاج (نشر موحّد على Railway)
+// تُسجَّل بعد مسارات /api حتى لا تعترض طلبات الـ API غير المطابقة.
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+  });
+}
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
