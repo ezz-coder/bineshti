@@ -1,6 +1,6 @@
-FROM node:20-bookworm-slim
+FROM node:24-bookworm-slim
 
-# أدوات البناء اللازمة لتجميع better-sqlite3 و sharp من المصدر على Linux
+# أدوات البناء اللازمة لتجميع sharp من المصدر على Linux (better-sqlite3 أُزيلت نهائياً)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
@@ -10,9 +10,6 @@ WORKDIR /app
 # تثبيت كل الاعتماديات (بما فيها dev مثل vite اللازم للبناء)
 COPY package.json package-lock.json ./
 RUN npm ci
-
-# إعادة تجميع better-sqlite3 من المصدر على نفس بيئة التشغيل (تمنع عدم توافق الثنائيات مسبقة البناء)
-RUN npm rebuild better-sqlite3 --build-from-source
 
 # نسخ الكود وبناء الواجهة
 COPY . .
