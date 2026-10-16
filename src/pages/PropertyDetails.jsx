@@ -57,14 +57,22 @@ function DetailsGallery({ images, alt }) {
         onScroll={handleScroll}
         className="no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto"
       >
-        {images.map((img, i) => (
-          <img
-            key={i}
-            src={resolveImageUrl(img)}
-            alt={`${alt} - صورة ${i + 1}`}
-            className="h-full w-full shrink-0 snap-center object-cover"
-          />
-        ))}
+        {images.map((img, i) => {
+          const imageUrl = resolveImageUrl(img);
+          return (
+            <img
+              key={i}
+              src={imageUrl}
+              srcSet={`${imageUrl}?w=400 400w, ${imageUrl}?w=800 800w`}
+              sizes="(max-width: 640px) 400px, 800px"
+              alt={`${alt} - صورة ${i + 1}`}
+              loading="lazy"
+              decoding="async"
+              fetchpriority="low"
+              className="h-full w-full shrink-0 snap-center object-cover"
+            />
+          );
+        })}
       </div>
       <div className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-dark-gray/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
         {index + 1}/{total}

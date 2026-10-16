@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import PropertyCard from '../components/PropertyCard';
-import PropertySkeleton from '../components/PropertySkeleton';
+import PropertySkeletonDisabled from '../components/PropertySkeleton';
 import TypeToggle from '../components/TypeToggle';
 import { IconArrowLeft } from '../components/icons';
 import api from '../services/api';
@@ -62,7 +62,7 @@ function SectionHeader({ title, to }) {
 
 function PropertyGrid({ items, contactPhone, whatsappPhone }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 performance-grid">
       {items.map((item) => (
         <PropertyCard
           key={`${item.category}-${item.id}`}
@@ -169,7 +169,7 @@ export default function Home() {
           <TypeToggle value={typeKey} onChange={setTypeKey} showAll />
         </div>
 
-        {loading && <PropertySkeleton count={8} />}
+        {loading && <PropertySkeletonDisabled count={8} />}
 
         {!loading && (
           <>

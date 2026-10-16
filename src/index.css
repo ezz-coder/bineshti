@@ -133,27 +133,29 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 38%),
     rgba(20, 20, 35, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(139, 92, 246, 0.15);
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  will-change: transform;
 }
 [data-theme='dark'] .glass-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 [data-theme='warm'] .glass-card {
   background: rgba(240, 232, 228, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(184, 149, 106, 0.3);
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(139, 115, 85, 0.12);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  will-change: transform;
 }
 [data-theme='warm'] .glass-card:hover {
-  box-shadow: 0 12px 40px rgba(139, 115, 85, 0.18);
+  box-shadow: 0 8px 24px rgba(139, 115, 85, 0.08);
 }
 
 /* هيدر/شريط زجاجي — blur أقوى مع حد سفلي */
@@ -161,17 +163,19 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 60%),
     rgba(15, 15, 26, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(139, 92, 246, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease;
 }
 [data-theme='warm'] .glass-header {
   background: rgba(232, 223, 208, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(184, 149, 106, 0.25);
   box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 
 /* تأثير الزجاج العام */
@@ -179,15 +183,17 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 45%),
     rgba(20, 20, 35, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(139, 92, 246, 0.15);
+  transition: box-shadow 0.2s ease;
 }
 [data-theme='warm'] .glass-effect {
   background: rgba(240, 232, 228, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(184, 149, 106, 0.3);
+  transition: box-shadow 0.2s ease;
 }
 
 /* ===== الأزرار ===== */
@@ -198,7 +204,8 @@
   border-radius: 1rem;
   box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.2);
   border: 1px solid rgba(167, 139, 250, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  will-change: transform;
 }
 [data-theme='dark'] .btn-primary:hover {
   transform: scale(1.05);
@@ -210,7 +217,8 @@
   border-radius: 1rem;
   box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
   border: 1px solid rgba(201, 168, 124, 0.4);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  will-change: transform;
   font-weight: 600;
 }
 [data-theme='warm'] .btn-primary:hover {
@@ -228,7 +236,8 @@
   color: #a78bfa;
   border-radius: 1rem;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  will-change: transform;
 }
 [data-theme='dark'] .btn-secondary:hover {
   background: rgba(40, 40, 65, 0.8);
@@ -240,7 +249,8 @@
   color: #8B6F47;
   border-radius: 1rem;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  will-change: transform;
   font-weight: 500;
 }
 [data-theme='warm'] .btn-secondary:hover {
@@ -275,7 +285,7 @@
   border-radius: 1rem;
   color: #4A3F35;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 [data-theme='warm'] .input-dark:focus {
   border-color: rgba(184, 149, 106, 0.6);
@@ -324,16 +334,20 @@
 /* ===== تأثيرات التوهج (Glow) ===== */
 
 [data-theme='dark'] .glow-effect {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+  transition: box-shadow 0.2s ease;
 }
 [data-theme='warm'] .glow-effect {
-  box-shadow: 0 0 20px rgba(184, 149, 106, 0.25);
+  box-shadow: 0 0 12px rgba(184, 149, 106, 0.2);
+  transition: box-shadow 0.2s ease;
 }
 [data-theme='dark'] .glow-strong {
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
+  transition: box-shadow 0.2s ease;
 }
 [data-theme='warm'] .glow-strong {
-  box-shadow: 0 0 40px rgba(139, 115, 85, 0.3);
+  box-shadow: 0 0 24px rgba(139, 115, 85, 0.2);
+  transition: box-shadow 0.2s ease;
 }
 
 /* ===== خط ضوئي تحت الـ Header ===== */
@@ -355,5 +369,19 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* Performance optimization for property grids */
+  .performance-grid {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
+}
+
+/* Reduce GPU load on mobile devices */
+@media (max-width: 768px) {
+  .glass-card, .glass-header, .glass-effect, .btn-secondary, .input-dark {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 }

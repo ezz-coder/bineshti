@@ -7,8 +7,8 @@ import { resolveImageUrl } from '../../utils/constants';
 import { applyTheme } from '../../utils/theme';
 
 /**
- * خانة إعداد واحدة مع زر حفظ خاص بها.
- * تحفظ هذا الحقل فقط عبر PUT منفصل (تحديث جزئي على الخادم).
+ * Setting field with its own save button.
+ * Saves this field only via separate PUT (partial update on server).
  */
 function SettingField({ label, name, value, onChange, placeholder, multiline, rows, type, dir, onSave, saving, saved }) {
   const Field = multiline ? TextAreaField : TextField;
@@ -47,10 +47,10 @@ function SettingField({ label, name, value, onChange, placeholder, multiline, ro
 }
 
 /**
- * صفحة الإعدادات العامة:
- * - بطاقة الإعدادات الأساسية (رقم التواصل، اسم الشركة): كل خانة بزر حفظ خاص.
- * - بطاقة "إدارة الشعار وصفحة من نحن" (الشعار، النبذة، رابط فيسبوك):
- *   زر واحد "حفظ جميع الإعدادات" يرسل FormData (نصوص + ملف الصورة إن وُجد).
+ * General settings page:
+ * - Basic settings card (contact phone, company name): each field has its own save button.
+ * - "Manage logo and about page" card (logo, about text, facebook link):
+ *   Single "Save all settings" button sends FormData (text + image file if any).
  */
 export default function AdminSettings() {
   const [form, setForm] = useState({
@@ -79,43 +79,38 @@ export default function AdminSettings() {
   const logoPreviewRef = useRef('');
   const aboutImagePreviewRef = useRef('');
   const [loading, setLoading] = useState(true);
-  const [savingField, setSavingField] = useState(''); // اسم الحقل الجاري حفظه
-  const [savedField, setSavedField] = useState(''); // اسم آخر حقل تم حفظه
+  const [savingField, setSavingField] = useState(''); // name of field being saved
+  const [savedField, setSavedField] = useState(''); // name of last saved field
   const [savingAll, setSavingAll] = useState(false);
   const [savedAll, setSavedAll] = useState(false);
   const [error, setError] = useState('');
-  const [theme, setTheme] = useState('dark'); // ثيم الموقع: dark | warm
+  const [theme, setTheme] = useState('dark'); // site theme: dark | warm
   const [themeSaving, setThemeSaving] = useState(false);
   const [themeMsg, setThemeMsg] = useState('');
-
-  // تبديل ثيم الموقع: يحفظ في الخادم ثم يطبّقه فوراً على <html> بدون إعادة تحميل
-  async function handleThemeChange(next) {
-    if (next === theme || themeSaving) return;
-    setThemeSaving(true);
-    setThemeMsg('');
-    setError('');
-    try {
-      await adminApi.put('/admin/settings', { theme: next });
-      applyTheme(next);
-      setTheme(next);
-      setThemeMsg('تم تغيير الثيم بنجاح');
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'تعذّر تغيير الثيم.'));
-    } finally {
-      setThemeSaving(false);
-    }
-  }
+  
+  // Account security state
+  const [security, setSecurity] = useState({
+    currentPassword: '',
+    newUsername: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [securitySaving, setSecuritySaving] = useState(false);
+  const [securitySaved, setSecuritySaved] = useState(false);
+  const [securityError, setSecurityError] = useState('');
 
   useEffect(() => {
     let active = true;
+    
     async function load() {
-      setLoading(true);
+      if (active) setLoading(true);
       try {
-        const res = await adminApi.get('/settings');
+        const res = await adminApi.get('/admin/settings');
         const data = res?.data?.data;
-        if (active && data) {
+        if (data && active) {
           setForm({
             contactPhone: data.contactPhone || '',
+            whatsappPhone: data.whatsappPhone || '',
             companyName: data.companyName || '',
             aboutText: data.aboutText || '',
             facebookUrl: data.facebookUrl || '',
@@ -130,10 +125,9 @@ export default function AdminSettings() {
           });
           setCurrentLogo(data.logoUrl || '');
           setCurrentAboutImage(data.aboutImageUrl || '');
-          if (data.theme === 'warm' || data.theme === 'dark') {
-            setTheme(data.theme);
-            applyTheme(data.theme);
-          }
+          const savedTheme = data.theme || 'dark';
+          setTheme(savedTheme);
+          applyTheme(savedTheme);
         }
       } catch (err) {
         if (active) setError(getApiErrorMessage(err, 'تعذّر تحميل الإعدادات.'));
@@ -147,7 +141,7 @@ export default function AdminSettings() {
     };
   }, []);
 
-  // تنظيف روابط المعاينة المؤقتة عند إزالة المكوّن
+  // Clean up temporary preview URLs when component unmounts
   useEffect(() => {
     return () => {
       if (logoPreviewRef.current) URL.revokeObjectURL(logoPreviewRef.current);
@@ -180,43 +174,43 @@ export default function AdminSettings() {
     setAboutImagePreview(nextPreview);
   }
 
-  // حفظ حقل واحد فقط عبر PUT منفصل (تحديث جزئي على الخادم)
+  // Save single field only via separate PUT (partial update on server)
   async function handleSaveField(field) {
     setSavingField(field);
     setSavedField('');
     setSavedAll(false);
     setError('');
     try {
-      await adminApi.put('/admin/settings', { [field]: form[field] });
-      setSavedField(field);
+      const res = await adminApi.put(`/admin/settings/${field}`, { [field]: form[field] });
+      if (res.data.success) {
+        setSavedField(field);
+      }
     } catch (err) {
-      setError(getApiErrorMessage(err, 'تعذّر حفظ الإعدادات.'));
+      setError(getApiErrorMessage(err, 'تعذّر حفظ هذا الحقل.'));
     } finally {
       setSavingField('');
     }
   }
 
-  // حفظ قسم "الشعار وصفحة من نحن" كاملاً عبر FormData (نصوص + ملفي الصور إن وُجدا)
-  async function handleSaveBranding(e) {
+  // Save all settings (logo, about text, facebook link) via FormData
+  async function handleSaveAll(e) {
     e.preventDefault();
     setSavingAll(true);
     setSavedAll(false);
-    setSavedField('');
     setError('');
+    
+    const fd = new FormData();
+    if (logoFile) fd.append('logo', logoFile);
+    if (aboutImageFile) fd.append('aboutImage', aboutImageFile);
+    
+    // Add text fields
+    Object.keys(form).forEach((key) => {
+      if (form[key] !== undefined && form[key] !== null) {
+        fd.append(key, form[key]);
+      }
+    });
+    
     try {
-      const fd = new FormData();
-      fd.append('aboutText', form.aboutText);
-      fd.append('facebookUrl', form.facebookUrl);
-      fd.append('aboutTitle', form.aboutTitle);
-      fd.append('aboutSubtitle', form.aboutSubtitle);
-      fd.append('aboutSection1Title', form.aboutSection1Title);
-      fd.append('aboutSection1Content', form.aboutSection1Content);
-      fd.append('aboutSection2Title', form.aboutSection2Title);
-      fd.append('aboutSection2Content', form.aboutSection2Content);
-      fd.append('aboutSection3Title', form.aboutSection3Title);
-      fd.append('aboutSection3Content', form.aboutSection3Content);
-      if (logoFile) fd.append('logo', logoFile);
-      if (aboutImageFile) fd.append('aboutImage', aboutImageFile);
       const res = await adminApi.put('/admin/settings', fd);
       const data = res?.data?.data;
       if (data) {
@@ -254,6 +248,74 @@ export default function AdminSettings() {
     }
   }
 
+  // Update login credentials securely
+  async function handleSecurityUpdate() {
+    // التحقق من اكتمال جميع الحقول
+    if (!security.currentPassword || !security.newUsername || !security.newPassword || !security.confirmPassword) {
+      setSecurityError('جميع الحقول مطلوبة.');
+      return;
+    }
+
+    // التحقق من تطابق كلمة المرور الجديدة مع التأكيد
+    if (security.newPassword !== security.confirmPassword) {
+      setSecurityError('كلمة المرور الجديدة وتأكيدها غير متطابقتين.');
+      return;
+    }
+
+    setSecuritySaving(true);
+    setSecurityError('');
+    setSecuritySaved(false);
+
+    try {
+      const res = await adminApi.put('/admin/credentials', {
+        currentPassword: security.currentPassword,
+        newUsername: security.newUsername,
+        newPassword: security.newPassword,
+      });
+
+      if (res.data.success) {
+        setSecuritySaved(true);
+        // Clear fields after success
+        setSecurity({
+          currentPassword: '',
+          newUsername: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          setSecuritySaved(false);
+        }, 3000);
+      }
+    } catch (err) {
+      setSecurityError(getApiErrorMessage(err, 'تعذّر تحديث بيانات الدخول.'));
+    } finally {
+      setSecuritySaving(false);
+    }
+  }
+
+  // حفظ مظهر الموقع في الخادم
+  async function handleSaveTheme(newTheme) {
+    if (theme === newTheme) return;
+    setThemeSaving(true);
+    setThemeMsg('');
+    setError('');
+    try {
+      const res = await adminApi.put('/admin/settings', { theme: newTheme });
+      if (res.data.success) {
+        setTheme(newTheme);
+        applyTheme(newTheme);
+        setThemeMsg('تم حفظ مظهر الموقع بنجاح.');
+        setTimeout(() => setThemeMsg(''), 3000);
+      }
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'تعذّر حفظ مظهر الموقع.'));
+    } finally {
+      setThemeSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm font-medium text-dark-gray/60">
@@ -275,7 +337,7 @@ export default function AdminSettings() {
       {/* ===== مظهر الموقع (اختيار الثيم) ===== */}
       <div className="rounded-card border border-border bg-card p-5 shadow-card">
         <h2 className="mb-1 text-base font-bold text-dark-gray">مظهر الموقع</h2>
-        <p className="mb-4 text-sm text-dark-gray/60">اختر ثيم الموقع</p>
+        <p className="mb-4 text-sm text-dark-gray/60">اختر مظهر الموقع</p>
 
         {themeMsg && (
           <div className="mb-4">
@@ -284,308 +346,340 @@ export default function AdminSettings() {
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          {/* زر الثيم الداكن */}
           <button
             type="button"
-            onClick={() => handleThemeChange('dark')}
-            disabled={themeSaving}
-            className={`flex flex-1 items-center gap-4 rounded-card border-2 p-4 text-right transition-all duration-200 disabled:opacity-60 ${
-              theme === 'dark'
-                ? 'border-accent bg-accent/5'
-                : 'border-border bg-card hover:border-dark-gray/20'
-            }`}
+            onClick={() => handleSaveTheme('dark')}
+            disabled={themeSaving || theme === 'dark'}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-600 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-gray-500 active:scale-95 disabled:opacity-60"
           >
-            <span className="flex shrink-0 items-center gap-1.5">
-              <span className="h-6 w-6 rounded-full bg-[#7C3AED]" />
-              <span className="h-6 w-6 rounded-full bg-[#0F0F1A]" />
-              <span className="h-6 w-6 rounded-full bg-[#FFFFFF]" />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-sm font-bold text-dark-gray">عصري داكن</span>
-              <span className="text-xs text-dark-gray/60">بنفسجي مضيء مع زجاجية</span>
-            </span>
+            {themeSaving && theme === 'dark' ? 'جارٍ الحفظ…' : 'داكن'}
           </button>
-
-          {/* زر الثيم الدافئ */}
           <button
             type="button"
-            onClick={() => handleThemeChange('warm')}
-            disabled={themeSaving}
-            className={`flex flex-1 items-center gap-4 rounded-card border-2 p-4 text-right transition-all duration-200 disabled:opacity-60 ${
-              theme === 'warm'
-                ? 'border-accent bg-accent/5'
-                : 'border-border bg-card hover:border-dark-gray/20'
-            }`}
+            onClick={() => handleSaveTheme('warm')}
+            disabled={themeSaving || theme === 'warm'}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-amber-500 active:scale-95 disabled:opacity-60"
           >
-            <span className="flex shrink-0 items-center gap-1.5">
-              <span className="h-6 w-6 rounded-full bg-[#8B7355]" />
-              <span className="h-6 w-6 rounded-full bg-[#EDE3D5]" />
-              <span className="h-6 w-6 rounded-full bg-[#FFFCE5]" />
-            </span>
-            <span className="flex flex-col">
-              <span className="text-sm font-bold text-dark-gray">كلاسيكي دافئ</span>
-              <span className="text-xs text-dark-gray/60">بيج + بني + ذهبي</span>
-            </span>
+            {themeSaving && theme === 'warm' ? 'جارٍ الحفظ…' : 'دافئ'}
           </button>
         </div>
       </div>
 
-
       {/* ===== الإعدادات الأساسية ===== */}
-      <div className="space-y-6 rounded-card border border-border bg-card p-5 shadow-card">
-        <SettingField
-          label="رقم الاتصال (يتصل مباشرة)"
-          name="contactPhone"
-          value={form.contactPhone}
-          onChange={handleChange}
-          placeholder="مثال: 01000000000"
-          onSave={handleSaveField}
-          saving={savingField === 'contactPhone'}
-          saved={savedField === 'contactPhone'}
-        />
-
-        <div className="border-t border-dark-gray/5" />
-
-        <SettingField
-          label="رقم الواتساب (يتواصل عبر واتساب)"
-          name="whatsappPhone"
-          value={form.whatsappPhone || ''}
-          onChange={handleChange}
-          placeholder="مثال: +201000000000"
-          onSave={handleSaveField}
-          saving={savingField === 'whatsappPhone'}
-          saved={savedField === 'whatsappPhone'}
-        />
-
-        <div className="border-t border-dark-gray/5" />
-
-        <SettingField
-          label="اسم الشركة"
-          name="companyName"
-          value={form.companyName}
-          onChange={handleChange}
-          placeholder="بي نيشتي للاستثمار العقاري"
-          onSave={handleSaveField}
-          saving={savingField === 'companyName'}
-          saved={savedField === 'companyName'}
-        />
+      <div className="rounded-card border border-border bg-card p-5 shadow-card">
+        <h2 className="mb-1 text-base font-bold text-dark-gray">الإعدادات الأساسية</h2>
+        <p className="mb-4 text-sm text-dark-gray/60">معلومات التواصل وبيانات الشركة</p>
+        
+        <div className="space-y-4">
+          <SettingField
+            label="رقم الهاتف"
+            name="contactPhone"
+            value={form.contactPhone}
+            onChange={handleChange}
+            placeholder="أدخل رقم الهاتف"
+            onSave={handleSaveField}
+            saving={savingField === 'contactPhone'}
+            saved={savedField === 'contactPhone'}
+          />
+          
+          <SettingField
+            label="رقم واتساب"
+            name="whatsappPhone"
+            value={form.whatsappPhone}
+            onChange={handleChange}
+            placeholder="أدخل رقم الواتساب"
+            onSave={handleSaveField}
+            saving={savingField === 'whatsappPhone'}
+            saved={savedField === 'whatsappPhone'}
+          />
+          
+          <SettingField
+            label="اسم الشركة"
+            name="companyName"
+            value={form.companyName}
+            onChange={handleChange}
+            placeholder="أدخل اسم الشركة"
+            onSave={handleSaveField}
+            saving={savingField === 'companyName'}
+            saved={savedField === 'companyName'}
+          />
+        </div>
       </div>
 
       {/* ===== إدارة الشعار وصفحة من نحن ===== */}
-      <form
-        onSubmit={handleSaveBranding}
-        className="space-y-6 rounded-card border border-border bg-card p-5 shadow-card"
-      >
-        <div>
-          <h2 className="text-base font-bold text-dark-gray sm:text-lg">
-            إدارة الشعار وصفحة من نحن
-          </h2>
-          <p className="mt-1 text-xs font-medium text-dark-gray/60">
-            الشعار يظهر في رأس الموقع وصفحة من نحن، والنبذة ورابط فيسبوك يظهران في صفحة من نحن.
-          </p>
-        </div>
-
-        <div>
-          <span className="mb-1.5 block text-sm font-semibold text-dark-gray">الشعار الحالي</span>
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dark-gray/10 bg-soft-beige">
-              {previewSrc ? (
-                <img src={previewSrc} alt="الشعار الحالي" className="h-full w-full object-contain" />
-              ) : (
-                <span className="px-2 text-center text-[11px] font-medium text-dark-gray/50">
-                  لا يوجد شعار
-                </span>
-              )}
+      <div className="rounded-card border border-border bg-card p-5 shadow-card">
+        <h2 className="mb-1 text-base font-bold text-dark-gray">إدارة الشعار وصفحة من نحن</h2>
+        <p className="mb-4 text-sm text-dark-gray/60">الشعار ونصوص صفحة من نحن</p>
+        
+        <form onSubmit={handleSaveAll}>
+          <div className="space-y-6">
+            {/* Logo section */}
+            <div>
+              <span className="mb-1.5 block text-sm font-semibold text-dark-gray">الشعار الحالي</span>
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dark-gray/10 bg-soft-beige">
+                  {previewSrc ? (
+                    <img src={previewSrc} alt="Current logo" className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="px-2 text-center text-[11px] font-medium text-dark-gray/50">
+                      لا يوجد شعار
+                    </span>
+                  )}
+                </div>
+                <label className="block w-full flex-1">
+                  <span className="mb-1.5 block text-xs font-medium text-dark-gray/70">
+                    اختر شعاراً جديداً (jpg, png, webp)
+                  </span>
+                  <span className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => fileInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
+                      }}
+                      className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95"
+                    >
+                      اختر الشعار
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-dark-gray/60">
+                      {logoFile ? logoFile.name : 'لم يتم اختيار ملف'}
+                    </span>
+                  </span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
-            <label className="block w-full flex-1">
-              <span className="mb-1.5 block text-xs font-medium text-dark-gray/70">
-                اختيار صورة جديدة (jpg, png, webp)
-              </span>
-              <span className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
-                  }}
-                  className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95"
-                >
-                  اختيار صورة
-                </span>
-                <span className="min-w-0 flex-1 truncate text-xs font-medium text-dark-gray/60">
-                  {logoFile ? logoFile.name : 'لم يتم اختيار ملف'}
-                </span>
-              </span>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp"
-                onChange={handleLogoChange}
-                className="hidden"
-              />
-            </label>
-          </div>
-        </div>
 
-        <div className="border-t border-dark-gray/5" />
+            <div className="border-t border-dark-gray/5" />
 
-        <TextAreaField
-          label="نبذة من نحن"
-          name="aboutText"
-          value={form.aboutText}
-          onChange={handleChange}
-          rows={6}
-          placeholder="اكتب نبذة احترافية عن الشركة…"
-        />
+            {/* About text section */}
+            <TextAreaField
+              label="نص «من نحن»"
+              name="aboutText"
+              value={form.aboutText}
+              onChange={handleChange}
+              rows={6}
+              placeholder="اكتب وصفاً احترافياً للشركة…"
+            />
 
-        <div className="border-t border-dark-gray/5" />
+            <TextField
+              label="عنوان صفحة «من نحن»"
+              name="aboutTitle"
+              value={form.aboutTitle}
+              onChange={handleChange}
+              placeholder="مثال: من نحن"
+            />
 
-        <TextField
-          label="رابط صفحة فيسبوك"
-          name="facebookUrl"
-          type="url"
-          dir="ltr"
-          value={form.facebookUrl}
-          onChange={handleChange}
-          placeholder="https://facebook.com/..."
-        />
+            <TextField
+              label="العنوان الفرعي لصفحة «من نحن»"
+              name="aboutSubtitle"
+              value={form.aboutSubtitle}
+              onChange={handleChange}
+              placeholder="مثال: قصتنا"
+            />
 
-        <div className="border-t border-dark-gray/5" />
+            <TextAreaField
+              label="عنوان القسم الأول"
+              name="aboutSection1Title"
+              value={form.aboutSection1Title}
+              onChange={handleChange}
+              rows={4}
+              placeholder="مثال: رسالتنا"
+            />
 
-        <div>
-          <h3 className="text-sm font-bold text-dark-gray">
-            نصوص صفحة من نحن
-          </h3>
-          <p className="mt-1 text-xs font-medium text-dark-gray/60">
-            كل حقل فارغ لن يظهر في صفحة من نحن.
-          </p>
-        </div>
+            <TextAreaField
+              label="محتوى القسم الأول"
+              name="aboutSection1Content"
+              value={form.aboutSection1Content}
+              onChange={handleChange}
+              rows={4}
+              placeholder="اكتب محتوى القسم الأول…"
+            />
 
-        <TextField
-          label="عنوان صفحة من نحن"
-          name="aboutTitle"
-          value={form.aboutTitle}
-          onChange={handleChange}
-          placeholder="مثال: من نحن"
-        />
+            <TextField
+              label="عنوان القسم الثاني"
+              name="aboutSection2Title"
+              value={form.aboutSection2Title}
+              onChange={handleChange}
+              placeholder="مثال: رؤيتنا"
+            />
 
-        <TextField
-          label="العنوان الفرعي"
-          name="aboutSubtitle"
-          value={form.aboutSubtitle}
-          onChange={handleChange}
-          placeholder="مثال: تعرف علينا أكثر"
-        />
+            <TextAreaField
+              label="محتوى القسم الثاني"
+              name="aboutSection2Content"
+              value={form.aboutSection2Content}
+              onChange={handleChange}
+              rows={4}
+              placeholder="اكتب محتوى القسم الثاني…"
+            />
 
-        <TextField
-          label="عنوان القسم الأول"
-          name="aboutSection1Title"
-          value={form.aboutSection1Title}
-          onChange={handleChange}
-          placeholder="مثال: رؤيتنا"
-        />
+            <TextField
+              label="عنوان القسم الثالث"
+              name="aboutSection3Title"
+              value={form.aboutSection3Title}
+              onChange={handleChange}
+              placeholder="مثال: قيمنا"
+            />
 
-        <TextAreaField
-          label="محتوى القسم الأول"
-          name="aboutSection1Content"
-          value={form.aboutSection1Content}
-          onChange={handleChange}
-          rows={4}
-          placeholder="اكتب محتوى القسم الأول…"
-        />
+            <TextAreaField
+              label="محتوى القسم الثالث"
+              name="aboutSection3Content"
+              value={form.aboutSection3Content}
+              onChange={handleChange}
+              rows={4}
+              placeholder="اكتب محتوى القسم الثالث…"
+            />
 
-        <TextField
-          label="عنوان القسم الثاني"
-          name="aboutSection2Title"
-          value={form.aboutSection2Title}
-          onChange={handleChange}
-          placeholder="مثال: رسالتنا"
-        />
+            <div className="border-t border-dark-gray/5" />
 
-        <TextAreaField
-          label="محتوى القسم الثاني"
-          name="aboutSection2Content"
-          value={form.aboutSection2Content}
-          onChange={handleChange}
-          rows={4}
-          placeholder="اكتب محتوى القسم الثاني…"
-        />
-
-        <TextField
-          label="عنوان القسم الثالث"
-          name="aboutSection3Title"
-          value={form.aboutSection3Title}
-          onChange={handleChange}
-          placeholder="مثال: قيمنا"
-        />
-
-        <TextAreaField
-          label="محتوى القسم الثالث"
-          name="aboutSection3Content"
-          value={form.aboutSection3Content}
-          onChange={handleChange}
-          rows={4}
-          placeholder="اكتب محتوى القسم الثالث…"
-        />
-
-        <div className="border-t border-dark-gray/5" />
-
-        <div>
-          <span className="mb-1.5 block text-sm font-semibold text-dark-gray">الصورة الإضافية لصفحة من نحن</span>
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dark-gray/10 bg-soft-beige">
-              {aboutImagePreviewSrc ? (
-                <img src={aboutImagePreviewSrc} alt="صورة صفحة من نحن" className="h-full w-full object-cover" />
-              ) : (
-                <span className="px-2 text-center text-[11px] font-medium text-dark-gray/50">
-                  لا توجد صورة
-                </span>
-              )}
+            <div>
+              <span className="mb-1.5 block text-sm font-semibold text-dark-gray">صورة إضافية لصفحة من نحن</span>
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dark-gray/10 bg-soft-beige">
+                  {aboutImagePreviewSrc ? (
+                    <img src={aboutImagePreviewSrc} alt="About page image" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="px-2 text-center text-[11px] font-medium text-dark-gray/50">
+                      لا توجد صورة
+                    </span>
+                  )}
+                </div>
+                <label className="block w-full flex-1">
+                  <span className="mb-1.5 block text-xs font-medium text-dark-gray/70">
+                    اختر صورة جديدة (jpg, png, webp)
+                  </span>
+                  <span className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => aboutImageInputRef.current?.click()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') aboutImageInputRef.current?.click();
+                      }}
+                      className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95"
+                    >
+                      اختر الصورة
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-dark-gray/60">
+                      {aboutImageFile ? aboutImageFile.name : 'لم يتم اختيار ملف'}
+                    </span>
+                  </span>
+                  <input
+                    ref={aboutImageInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={handleAboutImageChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
-            <label className="block w-full flex-1">
-              <span className="mb-1.5 block text-xs font-medium text-dark-gray/70">
-                اختيار صورة جديدة (jpg, png, webp)
-              </span>
-              <span className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => aboutImageInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') aboutImageInputRef.current?.click();
-                  }}
-                  className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95"
-                >
-                  اختيار صورة
-                </span>
-                <span className="min-w-0 flex-1 truncate text-xs font-medium text-dark-gray/60">
-                  {aboutImageFile ? aboutImageFile.name : 'لم يتم اختيار ملف'}
-                </span>
-              </span>
-              <input
-                ref={aboutImageInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp"
-                onChange={handleAboutImageChange}
-                className="hidden"
-              />
-            </label>
+
+            {savedAll && <SuccessBanner message="تم حفظ جميع الإعدادات بنجاح." />}
+
+            <div className="flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={savingAll}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95 disabled:opacity-60"
+              >
+                {savingAll ? 'جارٍ الحفظ…' : 'حفظ جميع إعدادات صفحة «من نحن»'}
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
+      </div>
 
-        {savedAll && <SuccessBanner message="تم حفظ جميع الإعدادات بنجاح." />}
+      {/* ===== أمان الحساب ===== */}
+      <div className="mb-8 rounded-card border border-border bg-card p-6 shadow-card">
+        <h2 className="mb-6 text-lg font-bold text-dark-gray">أمان الحساب</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="currentPassword" className="block text-sm font-semibold text-dark-gray mb-2">
+              كلمة المرور الحالية
+            </label>
+            <input
+              id="currentPassword"
+              type="password"
+              value={security.currentPassword}
+              onChange={(e) => setSecurity({...security, currentPassword: e.target.value})}
+              className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
+              placeholder="أدخل كلمة المرور الحالية"
+            />
+          </div>
 
-        <div className="flex items-center justify-end">
+          <div>
+            <label htmlFor="newUsername" className="block text-sm font-semibold text-dark-gray mb-2">
+              اسم المستخدم الجديد
+            </label>
+            <input
+              id="newUsername"
+              type="text"
+              value={security.newUsername}
+              onChange={(e) => setSecurity({...security, newUsername: e.target.value})}
+              className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
+              placeholder="أدخل اسم المستخدم الجديد"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="newPassword" className="block text-sm font-semibold text-dark-gray mb-2">
+              كلمة المرور الجديدة
+            </label>
+            <input
+              id="newPassword"
+              type="password"
+              value={security.newPassword}
+              onChange={(e) => setSecurity({...security, newPassword: e.target.value})}
+              className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
+              placeholder="أدخل كلمة المرور الجديدة"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-dark-gray mb-2">
+              تأكيد كلمة المرور الجديدة
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={security.confirmPassword}
+              onChange={(e) => setSecurity({...security, confirmPassword: e.target.value})}
+              className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
+              placeholder="أعد إدخال كلمة المرور الجديدة"
+            />
+          </div>
+
+          {securityError && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              {securityError}
+            </div>
+          )}
+
+          {securitySaved && (
+            <div className="rounded-lg bg-green-50 p-3 text-sm text-green-600">
+              تم تحديث بيانات الدخول بنجاح.
+            </div>
+          )}
+
           <button
-            type="submit"
-            disabled={savingAll}
+            type="button"
+            onClick={handleSecurityUpdate}
+            disabled={securitySaving}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95 disabled:opacity-60"
           >
-            {savingAll ? 'جارٍ الحفظ…' : 'حفظ جميع إعدادات صفحة من نحن'}
+            {securitySaving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

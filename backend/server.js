@@ -3,8 +3,9 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
 
-// استيراد مسارات الـ API
 const apartmentsRoutes = require('./routes/apartments');
 const villasRoutes = require('./routes/villas');
 const landsRoutes = require('./routes/lands');
@@ -13,52 +14,34 @@ const searchRoutes = require('./routes/search');
 const featuredRoutes = require('./routes/featured');
 const adminRoutes = require('./routes/admin');
 
-// استيراد الوسائط
 const { securityHeaders } = require('./middleware/securityHeaders');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
-// استيراد قاعدة البيانات (لتهيئة الجداول عند بدء التشغيل)
 require('./db/database');
 
 const app = express();
 
-// ===== إعداد CORS (مفعّل فقط من origins محددة) =====
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
-  .split(',')
-  .map((origin) => origin.trim());
-
-const corsOptions = {
-  origin(origin, callback) {
-    // السماح بالطلبات بدون origin (مثل Postman أو التطبيقات المحلية)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('غير مسموح لهذا المصدر بالوصول (CORS).'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-// ===== ترويسات الأمان =====
+app.use(cors());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // نعطّل CSP الخاص بـ helmet لأن securityHeaders يضبط CSP يسمح بالصور من الباك (5000) للفرونت (5173).
+  // إبقاء الاثنين معاً يجعل المتصفح يطبّق الأكثر تقييداً فيتكسر عرض الصور (أيقونة مكسورة).
+  contentSecurityPolicy: false,
+}));
+app.use(compression());
 app.use(securityHeaders);
-
-// ===== معالجة جسم الطلب =====
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ===== خدمة الصور الثابتة =====
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  maxAge: '30d',
+  immutable: true,
+}));
 
-// ===== نقطة فحص صحة الخادم =====
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ success: true, message: 'الخادم يعمل بنجاح.' });
+  res.json({ success: true, message: 'Server is running' });
 });
 
-// ===== مسارات الـ API =====
 app.use('/api/apartments', apartmentsRoutes);
 app.use('/api/villas', villasRoutes);
 app.use('/api/lands', landsRoutes);
@@ -67,17 +50,12 @@ app.use('/api/search', searchRoutes);
 app.use('/api/featured', featuredRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ===== معالجة المسار غير الموجود =====
 app.use(notFoundHandler);
-
-// ===== معالج الأخطاء المركزي =====
 app.use(errorHandler);
 
-// ===== تشغيل الخادم =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ الخادم يعمل على المنفذ ${PORT}`);
-  console.log(`🔗 CORS مسموح للمصادر: ${allowedOrigins.join(', ')}`);
+  console.log('Server running on port ' + PORT);
 });
 
 module.exports = app;

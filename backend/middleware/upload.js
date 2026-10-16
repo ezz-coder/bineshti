@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const sharp = require('sharp');
 const { UPLOAD_CONFIG } = require('../config/constants');
 
 // مجلد تخزين الصور
@@ -48,4 +49,86 @@ const upload = multer({
   fileFilter,
 });
 
-module.exports = upload;
+// === معالجة الصور بعد الرفع باستخدام sharp ===
+async function processUploadedImages(files) {
+  if (!files || !Array.isArray(files)) return;
+
+  for (const file of files) {
+    try {
+      const originalPath = path.join(UPLOAD_DIR, file.filename);
+      const ext = path.extname(file.originalname).toLowerCase();
+      const baseName = file.filename.replace(ext, '');
+
+      // 1. قراءة الصورة الأصلية
+      const image = sharp(originalPath);
+
+      // 2. قراءة معلومات الصورة
+      const metadata = await image.metadata();
+      if (!metadata.width || !metadata.height) continue;
+
+      // 3. تحديد الحد الأقصى للعرض بناءً على نوع الصورة
+      const maxWidth = file.fieldname === 'banner' || file.fieldname === 'logo'
+        ? 1600
+        : 1200;
+      const thumbnailWidth = 600;
+
+      // 4. إنشاء النسخة المضغوطة (WebP) للصورة الكبيرة
+      const largeWebpBuffer = await image
+        .resize(maxWidth, null, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      // 5. إنشاء نسخة JPEG للصورة الكبيرة (fallback)
+      const largeJpegBuffer = await image
+        .resize(maxWidth, null, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 75 })
+        .toBuffer();
+
+      // 6. حفظ النسختين (WebP + JPEG)
+      const webpPath = originalPath.replace(ext, '.webp');
+      const jpegPath = originalPath.replace(ext, '.jpg');
+      fs.writeFileSync(webpPath, largeWebpBuffer);
+      fs.writeFileSync(jpegPath, largeJpegBuffer);
+
+      // 7. إنشاء نسخة الصغير (thumbnail) - قبل حذف الأصلي
+      const thumbnailWebpPath = path.join(UPLOAD_DIR, `${baseName}-thumb.webp`);
+      const thumbnailJpegPath = path.join(UPLOAD_DIR, `${baseName}-thumb.jpg`);
+      await sharp(originalPath)
+        .resize(thumbnailWidth, null, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(thumbnailWebpPath);
+      await sharp(originalPath)
+        .resize(thumbnailWidth, null, { fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 75 })
+        .toFile(thumbnailJpegPath);
+
+      // 8. حذف الصورة الأصلية غير المضغوطة (بعد إنشاء كل النسخ)
+      if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.webp') {
+        fs.unlinkSync(originalPath);
+      }
+
+      file.webpFilename = path.relative(UPLOAD_DIR, webpPath);
+      file.jpegFilename = path.relative(UPLOAD_DIR, jpegPath);
+      file.thumbnailWebpFilename = path.relative(UPLOAD_DIR, thumbnailWebpPath);
+      file.thumbnailJpegFilename = path.relative(UPLOAD_DIR, thumbnailJpegPath);
+
+    } catch (error) {
+      console.error(`❌ فشل معالجة الصورة ${file.filename}:`, error.message);
+      // متابعة حتى لا يتوقف الرفع الكامل
+    }
+  }
+}
+
+//_middleware لمعالجة النتائج بعد الرفع
+const processImages = async (req, res, next) => {
+  if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+    await processUploadedImages(req.files);
+  }
+  next();
+};
+
+module.exports = {
+  upload,
+  processImages,
+  UPLOAD_DIR,
+};

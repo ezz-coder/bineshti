@@ -73,7 +73,7 @@ export default function About() {
               <img
                 src={logoUrl}
                 alt="شعار بي نيشتي"
-                className="h-32 w-32 rounded-full border-4 border-soft-blue object-cover shadow-lg transition-all duration-300 hover:scale-105 sm:h-36 sm:w-36 lg:h-40 lg:w-40"
+                className="h-32 w-32 rounded-full border-4 border-soft-blue object-contain shadow-lg transition-all duration-300 hover:scale-105 sm:h-36 sm:w-36 lg:h-40 lg:w-40"
               />
             ) : (
               <span className="text-3xl font-extrabold tracking-tight text-dark-gray transition-all duration-300 sm:text-4xl">

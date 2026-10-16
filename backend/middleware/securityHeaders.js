@@ -17,9 +17,10 @@ function securityHeaders(req, res, next) {
   res.setHeader('Referrer-Policy', 'no-referrer');
 
   // سياسة المحتوى الصارمة (CSP) - تحد من مصادر الموارد
+  // نسمح بالصور من أي مصدر لأن الفرونت (5173) يعرض صوراً من الباك (5000)
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; img-src 'self' data: blob:; object-src 'none'; frame-ancestors 'none'"
+    "default-src 'self'; img-src 'self' data: blob: http: https:; object-src 'none'; frame-ancestors 'none'"
   );
 
   // إزالة ترويسة X-Powered-By التي تكشف عن Express

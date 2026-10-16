@@ -16,12 +16,15 @@ function safeInt(value) {
 
 // ===== العمليات العامة (GET) =====
 
-// GET /api/lands - جميع الأراضي (مع فلترة اختيارية حسب النوع)
+// GET /api/lands - جميع الأراضي (مع فلترة ?type=, ?page=, ?limit=)
 async function getAllLands(req, res) {
-  const { type } = req.query;
-  const includeHidden = req.query.includeHidden === 'true';
-  const lands = landModel.getAll(type, includeHidden);
-  res.status(200).json({ success: true, data: lands });
+  const { type, page, limit, includeHidden } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const includeHiddenBool = includeHidden === 'true';
+
+  const result = landModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/lands/:id - تفاصيل أرض واحدة

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { IconArrowLeft, IconBed, IconCamera, IconLayers, IconMapPin, IconPhone, IconRuler } from './icons';
@@ -73,6 +73,8 @@ function ImageGallery({ images, alt, heightClass = 'h-32 sm:h-56' }) {
             src={resolveImageUrl(img)}
             alt={`${alt} - صورة ${i + 1}`}
             loading="lazy"
+            decoding="async"
+            fetchpriority="low"
             className="h-full w-full shrink-0 snap-center object-cover transition-transform duration-300 hover:scale-105"
           />
         ))}
@@ -116,7 +118,7 @@ function Badge({ children, tone = 'neutral' }) {
 
 // ===== بوكس العقار الموحد =====
 
-export default function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
+function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
   const { id, type, mainTitle, detailedAddress, description, price, floors, area, rooms, images } =
     property;
 
@@ -240,4 +242,10 @@ export default function PropertyCard({ property, category, contactPhone, whatsap
     </article>
   );
 }
+
+// ===== بطاقة العقار الرئيسية =====
+// مغلفة بـ React.memo لمنع إعادة render الزائدة
+
+const PropertyCardMemo = memo(PropertyCard);
+export default PropertyCardMemo;
 

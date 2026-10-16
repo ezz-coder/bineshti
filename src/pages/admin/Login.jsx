@@ -61,7 +61,7 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             className="mt-2 w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
-            placeholder="أدخل كلمة مرور الإدارة"
+            placeholder="أدخل كلمة مرور الإدارة (الافتراضي: Bn@2026!Secure#)"
           />
 
           {error && (

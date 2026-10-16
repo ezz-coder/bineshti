@@ -22,7 +22,7 @@ export default function Header() {
             <img
               src={logoUrl}
               alt="شعار بي نيشتي"
-              className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-90 sm:h-20 sm:w-20"
+              className="h-14 w-14 rounded-full border-2 border-white bg-white object-contain p-1 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-90 sm:h-20 sm:w-20"
             />
           ) : (
             <span className="text-lg font-extrabold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-3xl">

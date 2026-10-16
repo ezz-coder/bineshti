@@ -54,4 +54,67 @@ async function login(req, res) {
   });
 }
 
-module.exports = { login };
+// PUT /api/admin/credentials - تحديث بيانات الدخول بشكل آمن
+async function updateAdminCredentials(req, res) {
+  const { currentPassword, newUsername, newPassword } = req.body;
+  
+  // التحقق من وجود جميع الحقول المطلوبة
+  if (!currentPassword || !newUsername || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'جميع الحقول مطلوبة (كلمة المرور الحالية، اسم المستخدم الجديد، كلمة المرور الجديدة).',
+    });
+  }
+  
+  // جلب بيانات المسؤول الحالي
+  const admin = db.prepare('SELECT * FROM admin WHERE id = ?').get(req.admin.id);
+  
+  if (!admin) {
+    return res.status(404).json({
+      success: false,
+      message: 'لم يتم العثور على حساب المدير.',
+    });
+  }
+  
+  // التحقق من صحة كلمة المرور الحالية
+  const isCurrentPasswordValid = bcrypt.compareSync(currentPassword, admin.password);
+  
+  if (!isCurrentPasswordValid) {
+    return res.status(400).json({
+      success: false,
+      message: 'كلمة المرور الحالية غير صحيحة.',
+    });
+  }
+  
+  try {
+    // تشفير كلمة المرور الجديدة
+    const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
+    
+    // تحديث قاعدة البيانات
+    const stmt = db.prepare(
+      'UPDATE admin SET username = ?, password = ? WHERE id = ?'
+    );
+    const result = stmt.run(newUsername, hashedNewPassword, req.admin.id);
+    
+    if (result.changes === 0) {
+      return res.status(500).json({
+        success: false,
+        message: 'فشل تحديث بيانات الدخول.',
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'تم تحديث بيانات الدخول بنجاح.',
+    });
+    
+  } catch (error) {
+    console.error('Error updating admin credentials:', error);
+    res.status(500).json({
+      success: false,
+      message: 'حدث خطأ أثناء تحديث بيانات الدخول.',
+    });
+  }
+}
+
+module.exports = { login, updateAdminCredentials };

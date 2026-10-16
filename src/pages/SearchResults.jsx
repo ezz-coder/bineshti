@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import Pagination from '../components/Pagination';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import PropertyCard from '../components/PropertyCard';
-import PropertySkeleton from '../components/PropertySkeleton';
+import PropertySkeletonDisabled from '../components/PropertySkeleton';
 import { IconClose, IconSearch } from '../components/icons';
 import useSettings from '../hooks/useSettings';
 import api from '../services/api';
@@ -17,6 +18,7 @@ import api from '../services/api';
 export default function SearchResults() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(1);
   const query = (searchParams.get('q') || '').trim();
 
   const [inputValue, setInputValue] = useState(query);
@@ -45,7 +47,7 @@ export default function SearchResults() {
 
     async function load() {
       try {
-        const res = await api.get('/search', { params: { q: query } });
+        const res = await api.get('/search', { params: { q: query, page } });
         const data = res?.data?.data || {};
         // دمج الأقسام الثلاثة في قائمة واحدة مع ضمان وجود category لكل بطاقة
         const merged = [
@@ -150,7 +152,7 @@ export default function SearchResults() {
         )}
 
         {/* ===== أثناء التحميل ===== */}
-        {loading && <PropertySkeleton count={3} />}
+        {loading && <PropertySkeletonDisabled count={3} />}
 
         {/* ===== خطأ في الاتصال ===== */}
         {!loading && error && (
@@ -199,7 +201,7 @@ export default function SearchResults() {
 
         {/* ===== قائمة النتائج (عمودية) ===== */}
         {!loading && !error && query && results.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-4 performance-grid">
             {results.map((item) => (
               <PropertyCard
                 key={`${item.category}-${item.id}`}

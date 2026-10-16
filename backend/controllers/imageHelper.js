@@ -31,7 +31,9 @@ function buildImagePaths(req) {
   // 2) الصور الجديدة المرفوعة عبر multer
   if (Array.isArray(req.files)) {
     req.files.forEach((file) => {
-      paths.push(`/uploads/${file.filename}`);
+      // استخدام النسخة المحسّنة (.webp أو .jpg) إذا توفرت، وإلا الأصلية
+      const originalPath = `/uploads/${file.filename}`;
+      paths.push(getOptimizedImageUrl(originalPath));
     });
   }
 
@@ -64,8 +66,59 @@ function getImagesToDelete(oldImages, newImages) {
   return oldImages.filter((img) => !newImages.includes(img));
 }
 
+/**
+ * دالة لتحويل مسار الصورة إلى نسخة WebP إن وُجدت، وإلا تعيد المسار الأصلي.
+ * ترجع مسار الصورة المحسّن للعرض (عائلة .webp أولاً).
+ */
+function getOptimizedImageUrl(originalPath) {
+  if (!originalPath) return '';
+
+  // إن كان المسار مطلق (مع http) نعرضه كما هو
+  if (/^https?:\/\//i.test(originalPath)) {
+    return originalPath;
+  }
+
+  // استخرج اسم الملف والملفات الفرعية
+  const normalizedPath = originalPath.replace(/^\/+/, '');
+  const uploadDirIndex = normalizedPath.indexOf('uploads/');
+  if (uploadDirIndex === -1) return originalPath;
+
+  const uploadsRelative = normalizedPath.slice(uploadDirIndex + 'uploads/'.length);
+  const fileName = path.basename(uploadsRelative);
+  const dirName = path.dirname(uploadsRelative);
+
+  // فك تعبئة الاسم - قد يكون لديه نسيق (مثل .jpg, .jpeg, .png, .webp)
+  const dotIndex = fileName.lastIndexOf('.');
+  let name = fileName;
+  let ext = '';
+  if (dotIndex > 0) {
+    name = fileName.substring(0, dotIndex);
+    ext = fileName.substring(dotIndex);
+  }
+
+  // البحث عن الننسخة المضغوطة
+  const webpPath = path.join(dirName, `${name}.webp`);
+  const webpFullPath = path.join(UPLOAD_DIR, webpPath);
+  const jpegPath = path.join(dirName, `${name}.jpg`);
+  const jpegFullPath = path.join(UPLOAD_DIR, jpegPath);
+
+  // إذا وجدنا WebP نعرضه
+  if (fs.existsSync(webpFullPath)) {
+    return `/uploads/${webpPath}`;
+  }
+
+  // وإلا نعرض JPEG
+  if (fs.existsSync(jpegFullPath)) {
+    return `/uploads/${jpegPath}`;
+  }
+
+  // والصورة الأصلية كآخر وسيلة
+  return `/uploads/${normalizedPath}`;
+}
+
 module.exports = {
   buildImagePaths,
   deleteImageFiles,
   getImagesToDelete,
+  getOptimizedImageUrl,
 };

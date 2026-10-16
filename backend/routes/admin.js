@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { upload, processImages } = require('../middleware/upload');
 const {
   handleValidation,
   apartmentValidation,
@@ -12,11 +12,11 @@ const {
   hiddenValidation,
 } = require('../middleware/validation');
 
-const { login } = require('../controllers/adminController');
+const { login, updateAdminCredentials } = require('../controllers/adminController');
 const apartmentController = require('../controllers/apartmentController');
 const villaController = require('../controllers/villaController');
 const landController = require('../controllers/landController');
-const { updateSettings } = require('../controllers/settingsController');
+const { getSettings, updateSettings } = require('../controllers/settingsController');
 
 const router = express.Router();
 
@@ -32,6 +32,7 @@ router.use(authenticate);
 router.post(
   '/apartments',
   upload.array('images'),
+  processImages,
   apartmentValidation,
   handleValidation,
   apartmentController.createApartment
@@ -41,6 +42,7 @@ router.post(
 router.put(
   '/apartments/:id',
   upload.array('images'),
+  processImages,
   apartmentValidation,
   handleValidation,
   apartmentController.updateApartment
@@ -70,6 +72,7 @@ router.delete('/apartments/:id', apartmentController.deleteApartment);
 router.post(
   '/villas',
   upload.array('images'),
+  processImages,
   villaValidation,
   handleValidation,
   villaController.createVilla
@@ -79,6 +82,7 @@ router.post(
 router.put(
   '/villas/:id',
   upload.array('images'),
+  processImages,
   villaValidation,
   handleValidation,
   villaController.updateVilla
@@ -108,6 +112,7 @@ router.delete('/villas/:id', villaController.deleteVilla);
 router.post(
   '/lands',
   upload.array('images'),
+  processImages,
   landValidation,
   handleValidation,
   landController.createLand
@@ -117,6 +122,7 @@ router.post(
 router.put(
   '/lands/:id',
   upload.array('images'),
+  processImages,
   landValidation,
   handleValidation,
   landController.updateLand
@@ -142,6 +148,12 @@ router.put(
 router.delete('/lands/:id', landController.deleteLand);
 
 // ===== الإعدادات =====
+// GET /api/admin/settings - جلب الإعدادات
+router.get('/settings', getSettings);
+
+// PUT /api/admin/settings/:field - تحديث حقل واحد من الإعدادات (زر الحفظ بجوار كل حقل)
+router.put('/settings/:field', updateSettings);
+
 // PUT /api/admin/settings - تحديث الإعدادات (يقبل FormData مع ملفي logo و aboutImage)
 router.put(
   '/settings',
@@ -152,6 +164,14 @@ router.put(
   settingsValidation,
   handleValidation,
   updateSettings
+);
+
+// ===== أمان الحساب =====
+// PUT /api/admin/credentials - تحديث بيانات الدخول بشكل آمن
+router.put(
+  '/credentials',
+  authenticate,
+  updateAdminCredentials
 );
 
 module.exports = router;

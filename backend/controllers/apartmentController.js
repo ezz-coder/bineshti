@@ -16,13 +16,16 @@ function safeInt(value) {
 
 // ===== العمليات العامة (GET) =====
 
-// GET /api/apartments - جميع الشقق (مع فلترة اختيارية حسب النوع)
+// GET /api/apartments - جميع الشقق (مع فلترة ?type=, ?page=, ?limit=)
 // ملاحظة: لوحة التحكم ترسل ?includeHidden=true لرؤية العقارات المخفية أيضاً.
 async function getAllApartments(req, res) {
-  const { type } = req.query;
-  const includeHidden = req.query.includeHidden === 'true';
-  const apartments = apartmentModel.getAll(type, includeHidden);
-  res.status(200).json({ success: true, data: apartments });
+  const { type, page, limit, includeHidden } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const includeHiddenBool = includeHidden === 'true';
+  
+  const result = apartmentModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/apartments/:id - تفاصيل شقة واحدة

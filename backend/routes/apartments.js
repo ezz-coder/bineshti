@@ -6,7 +6,7 @@ const {
 
 const router = express.Router();
 
-// GET /api/apartments - جميع الشقق (مع فلترة ?type=)
+// GET /api/apartments - جميع الشقق (مع فلترة ?type=, ?page=, ?limit=)
 router.get('/', getAllApartments);
 
 // GET /api/apartments/:id - تفاصيل شقة واحدة

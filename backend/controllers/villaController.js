@@ -16,12 +16,15 @@ function safeInt(value) {
 
 // ===== العمليات العامة (GET) =====
 
-// GET /api/villas - جميع الفلل (مع فلترة اختيارية حسب النوع)
+// GET /api/villas - جميع الفلل (مع فلترة ?type=, ?page=, ?limit=)
 async function getAllVillas(req, res) {
-  const { type } = req.query;
-  const includeHidden = req.query.includeHidden === 'true';
-  const villas = villaModel.getAll(type, includeHidden);
-  res.status(200).json({ success: true, data: villas });
+  const { type, page, limit, includeHidden } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const includeHiddenBool = includeHidden === 'true';
+
+  const result = villaModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/villas/:id - تفاصيل فيلا واحدة

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import PropertyCard from '../components/PropertyCard';
-import PropertySkeleton from '../components/PropertySkeleton';
+import PropertySkeletonDisabled from '../components/PropertySkeleton';
 import TypeToggle from '../components/TypeToggle';
-import { CATEGORIES } from '../utils/constants';
+import Pagination from '../components/Pagination';
+import { CATEGORIES, TYPE_LABEL_MAP } from '../utils/constants';
 import useProperties from '../hooks/useProperties';
 import useSettings from '../hooks/useSettings';
 
@@ -12,10 +13,11 @@ import useSettings from '../hooks/useSettings';
 export default function Lands() {
   const { t } = useTranslation();
   const [typeKey, setTypeKey] = useState('all');
+  const [page, setPage] = useState(1);
   const { contactPhone, whatsappPhone } = useSettings();
 
   const category = CATEGORIES.land;
-  const { items, loading, error } = useProperties(category.endpoint, typeKey);
+  const { data: items, loading, error } = useProperties(category.endpoint, { type: typeKey === 'all' ? undefined : TYPE_LABEL_MAP[typeKey] });
 
   return (
     <section className="animate-fade-in">
@@ -32,7 +34,7 @@ export default function Lands() {
         </div>
 
         <div className="mt-8">
-          {loading && <PropertySkeleton count={8} />}
+          {loading && <PropertySkeletonDisabled count={8} />}
 
           {!loading && error && (
             <p className="py-16 text-center text-sm font-medium text-dark-gray/60">
@@ -47,7 +49,7 @@ export default function Lands() {
           )}
 
           {!loading && !error && items.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 performance-grid">
               {items.map((item) => (
                 <PropertyCard
                   key={item.id}
@@ -60,6 +62,15 @@ export default function Lands() {
             </div>
           )}
         </div>
+
+        {/* تعقّب بالـ Pagination */}
+        {!loading && !error && items.length > 0 && (
+          <Pagination
+            currentPage={page}
+            totalPages={1}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </section>
   );

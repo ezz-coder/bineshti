@@ -104,19 +104,25 @@ function initializeTables() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS admin (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
   // فهارس لتسريع البحث والفلترة
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_apartments_type ON apartments(type);
+  db.exec(`    CREATE INDEX IF NOT EXISTS idx_apartments_type ON apartments(type);
     CREATE INDEX IF NOT EXISTS idx_apartments_featured ON apartments(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_apartments_hidden ON apartments(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_apartments_created ON apartments(createdAt DESC);
     CREATE INDEX IF NOT EXISTS idx_villas_type ON villas(type);
     CREATE INDEX IF NOT EXISTS idx_villas_featured ON villas(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_villas_hidden ON villas(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_villas_created ON villas(createdAt DESC);
     CREATE INDEX IF NOT EXISTS idx_lands_type ON lands(type);
     CREATE INDEX IF NOT EXISTS idx_lands_featured ON lands(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_lands_hidden ON lands(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_lands_created ON lands(createdAt DESC);
   `);
 }
 
@@ -159,11 +165,11 @@ function seedInitialData() {
   // كلمة مرور المدير
   const adminCount = db.prepare('SELECT COUNT(*) AS count FROM admin').get();
   if (adminCount.count === 0) {
-    const plainPassword = process.env.ADMIN_PASSWORD || 'your-secure-admin-password';
+    const plainPassword = process.env.ADMIN_PASSWORD || 'Bn@2026!Secure#';
     const hashedPassword = bcrypt.hashSync(plainPassword, 10);
     db.prepare(
-      `INSERT INTO admin (password, createdAt) VALUES (?, CURRENT_TIMESTAMP)`
-    ).run(hashedPassword);
+      `INSERT INTO admin (username, password, createdAt) VALUES (?, ?, CURRENT_TIMESTAMP)`
+    ).run('benishaty', hashedPassword);
   }
 }
 

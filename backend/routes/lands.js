@@ -6,7 +6,7 @@ const {
 
 const router = express.Router();
 
-// GET /api/lands - جميع الأراضي (مع فلترة ?type=)
+// GET /api/lands - جميع الأراضي (مع فلترة ?type=, ?page=, ?limit=)
 router.get('/', getAllLands);
 
 // GET /api/lands/:id - تفاصيل أرض واحدة
