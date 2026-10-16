@@ -27,4 +27,4 @@ ENV NODE_ENV=production \
 
 EXPOSE 5000
 
-CMD ["node", "backend/server.js"]
+CMD ["node", "backend/diag.js"]
