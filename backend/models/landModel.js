@@ -1,10 +1,4 @@
-const db = require('../db/database');
-
-/**
- * نموذج الأراضي الفارغة (Lands)
- * ملاحظة: better-sqlite3 متزامن، لذلك الدوال هنا متزامنة،
- * بينما المتحكمات (controllers) تستخدم async/await.
- */
+const { query, get, run } = require('../db/database');
 
 function parseImages(images) {
   if (!images) return [];
@@ -34,129 +28,85 @@ function formatLand(row) {
   };
 }
 
-function getAll(type, includeHidden = false) {
+async function getAll(type, includeHidden = false) {
   let rows;
   if (type) {
     rows = includeHidden
-      ? db
-          .prepare('SELECT * FROM lands WHERE type = ? ORDER BY createdAt DESC')
-          .all(type)
-      : db
-          .prepare(
-            'SELECT * FROM lands WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC'
-          )
-          .all(type);
+      ? await query('SELECT * FROM lands WHERE type = $1 ORDER BY createdAt DESC', [type])
+      : await query('SELECT * FROM lands WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC', [type]);
   } else {
     rows = includeHidden
-      ? db.prepare('SELECT * FROM lands ORDER BY createdAt DESC').all()
-      : db.prepare('SELECT * FROM lands WHERE isHidden = 0 ORDER BY createdAt DESC').all();
+      ? await query('SELECT * FROM lands ORDER BY createdAt DESC')
+      : await query('SELECT * FROM lands WHERE isHidden = FALSE ORDER BY createdAt DESC');
   }
   return rows.map(formatLand);
 }
 
-function getById(id) {
-  const row = db.prepare('SELECT * FROM lands WHERE id = ?').get(id);
+async function getById(id) {
+  const row = await get('SELECT * FROM lands WHERE id = $1', [id]);
   return formatLand(row);
 }
 
-function create(data) {
+async function create(data) {
   const images = JSON.stringify(data.images || []);
-  const stmt = db.prepare(
+  const rows = await query(
     `INSERT INTO lands (type, mainTitle, detailedAddress, description, price, area, images, isFeatured, isHidden, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     RETURNING id`,
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, images, data.isFeatured ? true : false, data.isHidden ? true : false]
   );
-  const result = stmt.run(
-    data.type,
-    data.mainTitle,
-    data.detailedAddress,
-    data.description || null,
-    data.price,
-    data.area,
-    images,
-    data.isFeatured ? 1 : 0,
-    data.isHidden ? 1 : 0
-  );
-  return getById(result.lastInsertRowid);
+  return getById(rows[0].id);
 }
 
-function update(id, data) {
+async function update(id, data) {
   const images = JSON.stringify(data.images || []);
-  const stmt = db.prepare(
+  await run(
     `UPDATE lands
-     SET type = ?, mainTitle = ?, detailedAddress = ?, description = ?, price = ?, area = ?, images = ?, isFeatured = ?, isHidden = ?, updatedAt = CURRENT_TIMESTAMP
-     WHERE id = ?`
-  );
-  stmt.run(
-    data.type,
-    data.mainTitle,
-    data.detailedAddress,
-    data.description || null,
-    data.price,
-    data.area,
-    images,
-    data.isFeatured ? 1 : 0,
-    data.isHidden ? 1 : 0,
-    id
+     SET type = $1, mainTitle = $2, detailedAddress = $3, description = $4, price = $5, area = $6, images = $7, isFeatured = $8, isHidden = $9, updatedAt = CURRENT_TIMESTAMP
+     WHERE id = $10`,
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, images, data.isFeatured ? true : false, data.isHidden ? true : false, id]
   );
   return getById(id);
 }
 
-function remove(id) {
-  const stmt = db.prepare('DELETE FROM lands WHERE id = ?');
-  const result = stmt.run(id);
+async function remove(id) {
+  const result = await run('DELETE FROM lands WHERE id = $1', [id]);
   return result.changes > 0;
 }
 
-function setFeatured(id, isFeatured) {
-  const stmt = db.prepare(
-    'UPDATE lands SET isFeatured = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?'
-  );
-  stmt.run(isFeatured ? 1 : 0, id);
+async function setFeatured(id, isFeatured) {
+  await run('UPDATE lands SET isFeatured = $1, updatedAt = CURRENT_TIMESTAMP WHERE id = $2', [isFeatured ? true : false, id]);
   return getById(id);
 }
 
-function setHidden(id, isHidden) {
-  const stmt = db.prepare(
-    'UPDATE lands SET isHidden = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?'
-  );
-  stmt.run(isHidden ? 1 : 0, id);
+async function setHidden(id, isHidden) {
+  await run('UPDATE lands SET isHidden = $1, updatedAt = CURRENT_TIMESTAMP WHERE id = $2', [isHidden ? true : false, id]);
   return getById(id);
 }
 
-// جلب الأراضي مع pagination
-function getAllWithPagination(page, limit, type, includeHidden = false) {
+async function getAllWithPagination(page, limit, type, includeHidden = false) {
   const offset = (page - 1) * limit;
   let rows;
-  
   if (type) {
     rows = includeHidden
-      ? db
-          .prepare(
-            'SELECT * FROM lands WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?'
-          )
-          .all(type, limit, offset)
-      : db
-          .prepare(
-            'SELECT * FROM lands WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?'
-          )
-          .all(type, limit, offset);
+      ? await query('SELECT * FROM lands WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset])
+      : await query('SELECT * FROM lands WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset]);
   } else {
     rows = includeHidden
-      ? db.prepare('SELECT * FROM lands ORDER BY createdAt DESC LIMIT ? OFFSET ?').all(limit, offset)
-      : db.prepare('SELECT * FROM lands WHERE isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      ? await query('SELECT * FROM lands ORDER BY createdAt DESC LIMIT $1 OFFSET $2', [limit, offset])
+      : await query('SELECT * FROM lands WHERE isHidden = FALSE ORDER BY createdAt DESC LIMIT $1 OFFSET $2', [limit, offset]);
   }
-  
-  // جلب العدد الإجمالي للنتائج
-  let countStmt;
+
+  let countResult;
   if (type) {
-    countStmt = db.prepare('SELECT COUNT(*) AS total FROM lands WHERE type = ? AND isHidden = 0').get(type);
+    countResult = await get('SELECT COUNT(*) AS total FROM lands WHERE type = $1 AND isHidden = FALSE', [type]);
   } else {
-    countStmt = db.prepare('SELECT COUNT(*) AS total FROM lands WHERE isHidden = 0').get();
+    countResult = await get('SELECT COUNT(*) AS total FROM lands WHERE isHidden = FALSE');
   }
-  
-  const total = countStmt.total;
+
+  const total = countResult.total;
   const totalPages = Math.ceil(total / limit) || 1;
-  
+
   return {
     data: rows.map(formatLand),
     pagination: {
@@ -168,13 +118,4 @@ function getAllWithPagination(page, limit, type, includeHidden = false) {
   };
 }
 
-module.exports = {
-  getAll,
-  getAllWithPagination,
-  getById,
-  create,
-  update,
-  remove,
-  setFeatured,
-  setHidden,
-};
+module.exports = { getAll, getAllWithPagination, getById, create, update, remove, setFeatured, setHidden };

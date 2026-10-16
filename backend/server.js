@@ -19,6 +19,8 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 require('./db/database');
 
+const { dbReady } = require('./db/database');
+
 const app = express();
 
 app.use(cors());
@@ -67,8 +69,13 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log('Server running on port ' + PORT);
+dbReady.then(() => {
+  app.listen(PORT, () => {
+    console.log('Server running on port ' + PORT);
+  });
+}).catch((err) => {
+  console.error('Failed to initialize database:', err.message);
+  process.exit(1);
 });
 
 module.exports = app;

@@ -1,4 +1,4 @@
-const db = require('../db/database');
+const { query, get, run } = require('../db/database');
 
 /**
  * متحكم البحث الشامل - يبحث في جميع حقول كل قسم باستخدام SQL LIKE.
@@ -78,7 +78,7 @@ function buildOrCondition(columns, value) {
 }
 
 // تنفيذ البحث في جداول الثلاثة مع دمج شروط متعددة
-function runSearch(tables, joiner, buildGroups, page, limit) {
+async function runSearch(tables, joiner, buildGroups, page, limit) {
   const result = { apartments: [], villas: [], lands: [] };
   let total = 0;
 
@@ -90,18 +90,20 @@ function runSearch(tables, joiner, buildGroups, page, limit) {
 
     let rows;
     if (page !== null && limit !== null) {
-      const countStmt = db.prepare(`SELECT COUNT(*) AS total FROM ${table} WHERE isHidden = 0 AND ${where}`);
-      const countResult = countStmt.get(...params);
+      const countSql = `SELECT COUNT(*) AS total FROM ${table} WHERE isHidden = FALSE AND ${where}`;
+      const countResult = await get(countSql, params);
       total += countResult.total;
 
       const offset = (page - 1) * limit;
-      rows = db
-        .prepare(`SELECT * FROM ${table} WHERE isHidden = 0 AND ${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`)
-        .all(...params, limit, offset);
+      rows = await query(
+        `SELECT * FROM ${table} WHERE isHidden = FALSE AND ${where} ORDER BY createdAt DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, limit, offset]
+      );
     } else {
-      rows = db
-        .prepare(`SELECT * FROM ${table} WHERE isHidden = 0 AND ${where} ORDER BY createdAt DESC`)
-        .all(...params);
+      rows = await query(
+        `SELECT * FROM ${table} WHERE isHidden = FALSE AND ${where} ORDER BY createdAt DESC`,
+        params
+      );
     }
 
     const formatted = rows.map((row) => formatRow(table, row));
@@ -190,13 +192,13 @@ function escapeLike(value) {
 function buildOrCondition(columns, value) {
   const pattern = `%${escapeLike(value)}%`;
   return {
-    sql: `(${columns.map((c) => `${c} LIKE ? ESCAPE '\\\\'`).join(' OR ')})`,
+    sql: `(${columns.map((c, i) => `${c} LIKE $${i + 1} ESCAPE '\\\\'`).join(' OR ')})`,
     params: columns.map(() => pattern),
   };
 }
 
 // تنفيذ البحث في جداول الثلاثة مع دمج شروط متعددة ودعم pagination
-function runSearch(tables, joiner, buildGroups, page, limit) {
+async function runSearch_unused(tables, joiner, buildGroups, page, limit) {
   const result = { apartments: [], villas: [], lands: [] };
   let total = 0;
 
@@ -208,18 +210,20 @@ function runSearch(tables, joiner, buildGroups, page, limit) {
 
     let rows;
     if (page !== null && limit !== null) {
-      const countStmt = db.prepare(`SELECT COUNT(*) AS total FROM ${table} WHERE isHidden = 0 AND ${where}`);
-      const countResult = countStmt.get(...params);
+      const countSql = `SELECT COUNT(*) AS total FROM ${table} WHERE isHidden = FALSE AND ${where}`;
+      const countResult = await get(countSql, params);
       total += countResult.total;
 
       const offset = (page - 1) * limit;
-      rows = db
-        .prepare(`SELECT * FROM ${table} WHERE isHidden = 0 AND ${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`)
-        .all(...params, limit, offset);
+      rows = await query(
+        `SELECT * FROM ${table} WHERE isHidden = FALSE AND ${where} ORDER BY createdAt DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, limit, offset]
+      );
     } else {
-      rows = db
-        .prepare(`SELECT * FROM ${table} WHERE isHidden = 0 AND ${where} ORDER BY createdAt DESC`)
-        .all(...params);
+      rows = await query(
+        `SELECT * FROM ${table} WHERE isHidden = FALSE AND ${where} ORDER BY createdAt DESC`,
+        params
+      );
     }
 
     const formatted = rows.map((row) => formatRow(table, row));
@@ -259,19 +263,19 @@ async function search(req, res) {
   const words = query.split(/\s+/).filter(Boolean);
 
   // المحاولة 1: البحث بالعبارة كاملة في كل الحقول (OR بين الحقول)
-  let result = runSearch(tables, 'OR', (columns) => [
+  let result = await runSearch(tables, 'OR', (columns) => [
     buildOrCondition(columns, query),
   ], page, limit);
 
   // المحاولة 2: كل كلمة من العبارة تظهر في أي حقل (AND بين الكلمات)
   if (countResults(result.data) === 0 && words.length > 1) {
-    result = runSearch(tables, 'AND', (columns) =>
+    result = await runSearch(tables, 'AND', (columns) =>
       words.map((word) => buildOrCondition(columns, word))
     , page, limit);
 
     // المحاولة 3: أي كلمة تظهر في أي حقل (OR بين الكلمات)
     if (countResults(result.data) === 0) {
-      result = runSearch(tables, 'OR', (columns) =>
+      result = await runSearch(tables, 'OR', (columns) =>
         words.map((word) => buildOrCondition(columns, word))
       , page, limit);
     }

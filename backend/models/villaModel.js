@@ -1,10 +1,4 @@
-const db = require('../db/database');
-
-/**
- * نموذج الفلل (Villas)
- * ملاحظة: better-sqlite3 متزامن، لذلك الدوال هنا متزامنة،
- * بينما المتحكمات (controllers) تستخدم async/await.
- */
+const { query, get, run } = require('../db/database');
 
 function parseImages(images) {
   if (!images) return [];
@@ -35,131 +29,85 @@ function formatVilla(row) {
   };
 }
 
-function getAll(type, includeHidden = false) {
+async function getAll(type, includeHidden = false) {
   let rows;
   if (type) {
     rows = includeHidden
-      ? db
-          .prepare('SELECT * FROM villas WHERE type = ? ORDER BY createdAt DESC')
-          .all(type)
-      : db
-          .prepare(
-            'SELECT * FROM villas WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC'
-          )
-          .all(type);
+      ? await query('SELECT * FROM villas WHERE type = $1 ORDER BY createdAt DESC', [type])
+      : await query('SELECT * FROM villas WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC', [type]);
   } else {
     rows = includeHidden
-      ? db.prepare('SELECT * FROM villas ORDER BY createdAt DESC').all()
-      : db.prepare('SELECT * FROM villas WHERE isHidden = 0 ORDER BY createdAt DESC').all();
+      ? await query('SELECT * FROM villas ORDER BY createdAt DESC')
+      : await query('SELECT * FROM villas WHERE isHidden = FALSE ORDER BY createdAt DESC');
   }
   return rows.map(formatVilla);
 }
 
-function getById(id) {
-  const row = db.prepare('SELECT * FROM villas WHERE id = ?').get(id);
+async function getById(id) {
+  const row = await get('SELECT * FROM villas WHERE id = $1', [id]);
   return formatVilla(row);
 }
 
-function create(data) {
+async function create(data) {
   const images = JSON.stringify(data.images || []);
-  const stmt = db.prepare(
+  const rows = await query(
     `INSERT INTO villas (type, mainTitle, detailedAddress, description, price, area, rooms, images, isFeatured, isHidden, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     RETURNING id`,
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, data.isFeatured ? true : false, data.isHidden ? true : false]
   );
-  const result = stmt.run(
-    data.type,
-    data.mainTitle,
-    data.detailedAddress,
-    data.description || null,
-    data.price,
-    data.area,
-    data.rooms,
-    images,
-    data.isFeatured ? 1 : 0,
-    data.isHidden ? 1 : 0
-  );
-  return getById(result.lastInsertRowid);
+  return getById(rows[0].id);
 }
 
-function update(id, data) {
+async function update(id, data) {
   const images = JSON.stringify(data.images || []);
-  const stmt = db.prepare(
+  await run(
     `UPDATE villas
-     SET type = ?, mainTitle = ?, detailedAddress = ?, description = ?, price = ?, area = ?, rooms = ?, images = ?, isFeatured = ?, isHidden = ?, updatedAt = CURRENT_TIMESTAMP
-     WHERE id = ?`
-  );
-  stmt.run(
-    data.type,
-    data.mainTitle,
-    data.detailedAddress,
-    data.description || null,
-    data.price,
-    data.area,
-    data.rooms,
-    images,
-    data.isFeatured ? 1 : 0,
-    data.isHidden ? 1 : 0,
-    id
+     SET type = $1, mainTitle = $2, detailedAddress = $3, description = $4, price = $5, area = $6, rooms = $7, images = $8, isFeatured = $9, isHidden = $10, updatedAt = CURRENT_TIMESTAMP
+     WHERE id = $11`,
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, data.isFeatured ? true : false, data.isHidden ? true : false, id]
   );
   return getById(id);
 }
 
-function remove(id) {
-  const stmt = db.prepare('DELETE FROM villas WHERE id = ?');
-  const result = stmt.run(id);
+async function remove(id) {
+  const result = await run('DELETE FROM villas WHERE id = $1', [id]);
   return result.changes > 0;
 }
 
-function setFeatured(id, isFeatured) {
-  const stmt = db.prepare(
-    'UPDATE villas SET isFeatured = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?'
-  );
-  stmt.run(isFeatured ? 1 : 0, id);
+async function setFeatured(id, isFeatured) {
+  await run('UPDATE villas SET isFeatured = $1, updatedAt = CURRENT_TIMESTAMP WHERE id = $2', [isFeatured ? true : false, id]);
   return getById(id);
 }
 
-function setHidden(id, isHidden) {
-  const stmt = db.prepare(
-    'UPDATE villas SET isHidden = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?'
-  );
-  stmt.run(isHidden ? 1 : 0, id);
+async function setHidden(id, isHidden) {
+  await run('UPDATE villas SET isHidden = $1, updatedAt = CURRENT_TIMESTAMP WHERE id = $2', [isHidden ? true : false, id]);
   return getById(id);
 }
 
-// جلب الفلل مع pagination
-function getAllWithPagination(page, limit, type, includeHidden = false) {
+async function getAllWithPagination(page, limit, type, includeHidden = false) {
   const offset = (page - 1) * limit;
   let rows;
-  
   if (type) {
     rows = includeHidden
-      ? db
-          .prepare(
-            'SELECT * FROM villas WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?'
-          )
-          .all(type, limit, offset)
-      : db
-          .prepare(
-            'SELECT * FROM villas WHERE type = ? AND isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?'
-          )
-          .all(type, limit, offset);
+      ? await query('SELECT * FROM villas WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset])
+      : await query('SELECT * FROM villas WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset]);
   } else {
     rows = includeHidden
-      ? db.prepare('SELECT * FROM villas ORDER BY createdAt DESC LIMIT ? OFFSET ?').all(limit, offset)
-      : db.prepare('SELECT * FROM villas WHERE isHidden = 0 ORDER BY createdAt DESC LIMIT ? OFFSET ?').all(limit, offset);
+      ? await query('SELECT * FROM villas ORDER BY createdAt DESC LIMIT $1 OFFSET $2', [limit, offset])
+      : await query('SELECT * FROM villas WHERE isHidden = FALSE ORDER BY createdAt DESC LIMIT $1 OFFSET $2', [limit, offset]);
   }
-  
-  // جلب العدد الإجمالي للنتائج
-  let countStmt;
+
+  let countResult;
   if (type) {
-    countStmt = db.prepare('SELECT COUNT(*) AS total FROM villas WHERE type = ? AND isHidden = 0').get(type);
+    countResult = await get('SELECT COUNT(*) AS total FROM villas WHERE type = $1 AND isHidden = FALSE', [type]);
   } else {
-    countStmt = db.prepare('SELECT COUNT(*) AS total FROM villas WHERE isHidden = 0').get();
+    countResult = await get('SELECT COUNT(*) AS total FROM villas WHERE isHidden = FALSE');
   }
-  
-  const total = countStmt.total;
+
+  const total = countResult.total;
   const totalPages = Math.ceil(total / limit) || 1;
-  
+
   return {
     data: rows.map(formatVilla),
     pagination: {
@@ -171,13 +119,4 @@ function getAllWithPagination(page, limit, type, includeHidden = false) {
   };
 }
 
-module.exports = {
-  getAll,
-  getAllWithPagination,
-  getById,
-  create,
-  update,
-  remove,
-  setFeatured,
-  setHidden,
-};
+module.exports = { getAll, getAllWithPagination, getById, create, update, remove, setFeatured, setHidden };

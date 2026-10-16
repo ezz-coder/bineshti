@@ -1,4 +1,4 @@
-const db = require('../db/database');
+const { query, get, run } = require('../db/database');
 const { deleteImageFiles } = require('./imageHelper');
 
 /**
@@ -31,7 +31,7 @@ function formatSettings(row) {
 
 // GET /api/settings - جلب الإعدادات (عام)
 async function getSettings(req, res) {
-  const row = db.prepare('SELECT * FROM settings ORDER BY id LIMIT 1').get();
+  const row = await get('SELECT * FROM settings ORDER BY id LIMIT 1');
   res.status(200).json({ success: true, data: formatSettings(row) });
 }
 
@@ -59,7 +59,7 @@ async function updateSettings(req, res) {
   const theme =
     req.body.theme === 'warm' ? 'warm' : req.body.theme === 'dark' ? 'dark' : undefined;
 
-  const existing = db.prepare('SELECT * FROM settings ORDER BY id LIMIT 1').get();
+  const existing = await get('SELECT * FROM settings ORDER BY id LIMIT 1');
 
   // بناء قائمة الحقول المراد تحديثها فقط (المُرسلة فعلاً)
   const fields = [];
@@ -82,7 +82,7 @@ async function updateSettings(req, res) {
   };
   Object.entries(textFields).forEach(([key, val]) => {
     if (val !== undefined) {
-      fields.push(`${key} = ?`);
+      fields.push(`${key} = $` + (values.length + 1));
       values.push(val);
     }
   });
@@ -96,7 +96,7 @@ async function updateSettings(req, res) {
   const imagesToDelete = [];
   if (logoFile) {
     const newLogoPath = `/uploads/${logoFile.filename}`;
-    fields.push('logoUrl = ?');
+    fields.push('logoUrl = $' + (values.length + 1));
     values.push(newLogoPath);
     // حفظ مسار الشعار القديم لحذفه من القرص بعد نجاح التحديث
     if (existing && existing.logoUrl && existing.logoUrl !== newLogoPath) {
@@ -105,7 +105,7 @@ async function updateSettings(req, res) {
   }
   if (aboutImageFile) {
     const newAboutImagePath = `/uploads/${aboutImageFile.filename}`;
-    fields.push('aboutImageUrl = ?');
+    fields.push('aboutImageUrl = $' + (values.length + 1));
     values.push(newAboutImagePath);
     // حفظ مسار الصورة القديمة لحذفها من القرص بعد نجاح التحديث
     if (existing && existing.aboutImageUrl && existing.aboutImageUrl !== newAboutImagePath) {
@@ -117,39 +117,42 @@ async function updateSettings(req, res) {
     // إنشاء صف الإعدادات إن لم يوجد (القيم غير المُرسلة تبقى NULL)
     const logoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
     const aboutImagePath = aboutImageFile ? `/uploads/${aboutImageFile.filename}` : null;
-    db.prepare(
+    await query(
       `INSERT INTO settings (contactPhone, whatsappPhone, companyName, aboutText, facebookUrl, logoUrl,
         aboutTitle, aboutSubtitle,
         aboutSection1Title, aboutSection1Content,
         aboutSection2Title, aboutSection2Content,
         aboutSection3Title, aboutSection3Content,
         aboutImageUrl, theme, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
-    ).run(
-      contactPhone ?? null,
-      whatsappPhone ?? null,
-      companyName ?? null,
-      aboutText ?? null,
-      facebookUrl ?? null,
-      logoPath,
-      aboutTitle ?? null,
-      aboutSubtitle ?? null,
-      aboutSection1Title ?? null,
-      aboutSection1Content ?? null,
-      aboutSection2Title ?? null,
-      aboutSection2Content ?? null,
-      aboutSection3Title ?? null,
-      aboutSection3Content ?? null,
-      aboutImagePath,
-      theme ?? 'dark'
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, CURRENT_TIMESTAMP)`,
+      [
+        contactPhone ?? null,
+        whatsappPhone ?? null,
+        companyName ?? null,
+        aboutText ?? null,
+        facebookUrl ?? null,
+        logoPath,
+        aboutTitle ?? null,
+        aboutSubtitle ?? null,
+        aboutSection1Title ?? null,
+        aboutSection1Content ?? null,
+        aboutSection2Title ?? null,
+        aboutSection2Content ?? null,
+        aboutSection3Title ?? null,
+        aboutSection3Content ?? null,
+        aboutImagePath,
+        theme ?? 'dark'
+      ]
     );
   } else if (fields.length > 0) {
     // تحديث الحقول المُرسلة فقط للصف الموجود
-    db.prepare(
+    values.push(existing.id);
+    await query(
       `UPDATE settings
        SET ${fields.join(', ')}, updatedAt = CURRENT_TIMESTAMP
-       WHERE id = ?`
-    ).run(...values, existing.id);
+       WHERE id = $` + values.length,
+      values
+    );
 
     // حذف الصور القديمة من القرص بعد نجاح التحديث (لتوفير المساحة)
     if (imagesToDelete.length > 0) {
@@ -157,7 +160,7 @@ async function updateSettings(req, res) {
     }
   }
 
-  const updated = db.prepare('SELECT * FROM settings ORDER BY id LIMIT 1').get();
+  const updated = await get('SELECT * FROM settings ORDER BY id LIMIT 1');
   res.status(200).json({
     success: true,
     message: 'تم تحديث الإعدادات بنجاح.',

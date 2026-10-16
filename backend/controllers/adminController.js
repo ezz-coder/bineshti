@@ -1,4 +1,4 @@
-const db = require('../db/database');
+const { query, get, run } = require('../db/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JWT_EXPIRES_IN_SECONDS } = require('../config/constants');
@@ -20,7 +20,7 @@ async function login(req, res) {
   }
 
   // جلب كلمة مرور المدير المخزنة (مشفرة)
-  const admin = db.prepare('SELECT * FROM admin ORDER BY id LIMIT 1').get();
+  const admin = await get('SELECT * FROM admin ORDER BY id LIMIT 1');
 
   if (!admin) {
     return res.status(500).json({
@@ -67,7 +67,7 @@ async function updateAdminCredentials(req, res) {
   }
   
   // جلب بيانات المسؤول الحالي
-  const admin = db.prepare('SELECT * FROM admin WHERE id = ?').get(req.admin.id);
+  const admin = await get('SELECT * FROM admin WHERE id = $1', [req.admin.id]);
   
   if (!admin) {
     return res.status(404).json({
@@ -91,10 +91,10 @@ async function updateAdminCredentials(req, res) {
     const hashedNewPassword = bcrypt.hashSync(newPassword, 10);
     
     // تحديث قاعدة البيانات
-    const stmt = db.prepare(
-      'UPDATE admin SET username = ?, password = ? WHERE id = ?'
+    const result = await run(
+      'UPDATE admin SET username = $1, password = $2 WHERE id = $3',
+      [newUsername, hashedNewPassword, req.admin.id]
     );
-    const result = stmt.run(newUsername, hashedNewPassword, req.admin.id);
     
     if (result.changes === 0) {
       return res.status(500).json({
