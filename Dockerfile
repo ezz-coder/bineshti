@@ -7,13 +7,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# تثبيت الاعتماديات أولاً (طبقة كاش)
+# تثبيت كل الاعتماديات (بما فيها dev مثل vite اللازم للبناء)
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 # نسخ الكود وبناء الواجهة
 COPY . .
 RUN npm run build
+
+# حذف اعتماديات التطوير بعد البناء لتصغير الصورة
+RUN npm prune --omit=dev
 
 # مجلد البيانات (يُربط عليه الـ Volume في Railway)
 RUN mkdir -p /data/uploads
