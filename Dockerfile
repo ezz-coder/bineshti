@@ -27,8 +27,6 @@ RUN sed -i 's/\r$//' backend/entrypoint.sh && chmod +x backend/entrypoint.sh
 ENV NODE_ENV=production \
     UPLOADS_DIR=/data/uploads
 
-VOLUME ["/data/uploads"]
-
 EXPOSE 5000
 
 ENTRYPOINT ["/app/backend/entrypoint.sh"]
