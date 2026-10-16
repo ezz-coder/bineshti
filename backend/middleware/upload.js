@@ -1,7 +1,8 @@
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const sharp = require('sharp');
+// تحميل sharp بشكل كسول داخل processUploadedImages حتى لا يسقط السيرفر
+// عند الإقلاع لو الثنائية الأصلية غير متوافقة مع بيئة النشر (Segmentation fault).
 const { UPLOAD_CONFIG } = require('../config/constants');
 
 // مجلد تخزين الصور (قابل للتجاوز عبر UPLOADS_DIR حتى يعيش على الـ Volume في Railway)
@@ -52,6 +53,15 @@ const upload = multer({
 // === معالجة الصور بعد الرفع باستخدام sharp ===
 async function processUploadedImages(files) {
   if (!files || !Array.isArray(files)) return;
+
+  let sharp;
+  try {
+    sharp = require('sharp');
+  } catch (error) {
+    // sharp غير متاح (ثنائية غير متوافقة) — نترك الصور الأصلية كما هي بدل إسقاط السيرفر
+    console.warn('⚠️ sharp غير متاح، سيتم الاحتفاظ بالصور الأصلية بدون ضغط:', error.message);
+    return;
+  }
 
   for (const file of files) {
     try {
