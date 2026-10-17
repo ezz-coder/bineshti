@@ -23,7 +23,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await adminApi.post('/api/admin/login', { password });
+      const res = await adminApi.post('/admin/login', { password });
       const token = res?.data?.token;
       if (token) {
         setToken(token);
