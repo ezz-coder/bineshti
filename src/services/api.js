@@ -1,11 +1,20 @@
 import axios from 'axios';
 
 /**
+ * تحديد عنوان الـ API بشكل ذكي:
+ * - في الإنتاج (نفس الدومين): مسار نسبي `/api` — يعمل دائماً مهما كانت قيمة VITE_API_URL
+ * - في التطوير المحلي: يقرأ VITE_API_URL أو يرجع لـ localhost:5000/api
+ */
+const BASE_URL =
+  import.meta.env.MODE === 'production'
+    ? '/api'
+    : import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+/**
  * نسخة axios جاهزة للاستخدام في كل خدمات الـ API.
- * تقرأ عنوان الـ API من متغيرات البيئة VITE_API_URL.
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -36,7 +45,7 @@ export function removeToken() {
  * مع ترك Content-Type لـ axios (multipart/form-data) عند إرسال FormData.
  */
 export const adminApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: BASE_URL,
 });
 
 adminApi.interceptors.request.use((config) => {

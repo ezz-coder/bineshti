@@ -6,13 +6,14 @@ import { adminApi, getApiErrorMessage, setToken } from '../../services/api';
 import { APP_NAME } from '../../utils/constants';
 
 /**
- * صفحة تسجيل الدخول للوحة التحكم — تطلب كلمة المرور فقط.
+ * صفحة تسجيل الدخول للوحة التحكم — تطلب اسم المستخدم وكلمة المرور.
  * عند النجاح تحفظ التوكن في localStorage وتوجّه للوحة التحكم.
  */
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await adminApi.post('/admin/login', { password });
+      const res = await adminApi.post('/admin/login', { username, password });
       const token = res?.data?.token;
       if (token) {
         setToken(token);
@@ -33,7 +34,7 @@ export default function Login() {
         setError('تعذّر الحصول على رمز الدخول.');
       }
     } catch (err) {
-      setError(getApiErrorMessage(err, 'فشل تسجيل الدخول. تحقّق من كلمة المرور.'));
+      setError(getApiErrorMessage(err, 'فشل تسجيل الدخول. تحقّق من البيانات.'));
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,21 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="password" className="block text-sm font-semibold text-dark-gray">
+          <label htmlFor="username" className="block text-sm font-semibold text-dark-gray">
+            اسم المستخدم
+          </label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            required
+            className="mt-2 w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
+            placeholder="أدخل اسم المستخدم"
+          />
+
+          <label htmlFor="password" className="mt-4 block text-sm font-semibold text-dark-gray">
             كلمة المرور
           </label>
           <input
@@ -60,8 +75,9 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
+            required
             className="mt-2 w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20"
-            placeholder="أدخل كلمة مرور الإدارة"
+            placeholder="أدخل كلمة المرور"
           />
 
           {error && (
@@ -72,7 +88,7 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading || !username || !password}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-button bg-accent px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95 disabled:opacity-60"
           >
             {loading ? 'جارٍ الدخول…' : 'تسجيل الدخول'}

@@ -10,22 +10,31 @@ const { JWT_EXPIRES_IN_SECONDS } = require('../config/constants');
 
 // POST /api/admin/login - تسجيل الدخول
 async function login(req, res) {
-  const { password } = req.body;
+  const { username, password } = req.body;
 
-  if (!password) {
+  if (!username || !password) {
     return res.status(400).json({
       success: false,
-      message: 'كلمة المرور مطلوبة.',
+      message: 'اسم المستخدم وكلمة المرور مطلوبان.',
     });
   }
 
-  // جلب كلمة مرور المدير المخزنة (مشفرة)
+  // جلب حساب المدير
   const admin = await get('SELECT * FROM admin ORDER BY id LIMIT 1');
 
   if (!admin) {
     return res.status(500).json({
       success: false,
       message: 'لم يتم إعداد حساب المدير.',
+    });
+  }
+
+  // التحقق من اسم المستخدم
+  const usernameMatch = admin.username && username.trim().toLowerCase() === admin.username.toLowerCase();
+  if (!usernameMatch) {
+    return res.status(401).json({
+      success: false,
+      message: 'اسم المستخدم غير صحيح.',
     });
   }
 
