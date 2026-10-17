@@ -71,21 +71,21 @@ export default function Login() {
             كلمة المرور
           </label>
           <div className="relative mt-2">
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20 pl-12"
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              className="w-full rounded-input border border-dark-gray/10 bg-soft-beige px-4 py-3 text-sm text-dark-gray outline-none transition-all duration-300 focus:border-accent focus:bg-soft-blue focus:ring-2 focus:ring-accent/20 pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-accent hover:underline"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-accent hover:underline"
             >
-              {showPassword ? 'H' : 'S'}
+              {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
 
