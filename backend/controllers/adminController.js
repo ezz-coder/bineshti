@@ -13,14 +13,9 @@ async function login(req, res) {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'اسم المستخدم وكلمة المرور مطلوبان.',
-      });
-    }
-
-    // جلب حساب المدير
+    // وضع توافقي مؤقت: النسخ القديمة المخزّنة (كاش) ترسل كلمة المرور فقط.
+    // إن وصل password بدون username نتحقق من كلمة المرور مباشرة
+    // حتى لا تظهر رسالة «المسار المطلوب غير موجود» للمستخدم.
     const admin = await get('SELECT * FROM admin ORDER BY id LIMIT 1');
 
     if (!admin) {
@@ -30,13 +25,23 @@ async function login(req, res) {
       });
     }
 
-    // التحقق من اسم المستخدم
-    const usernameMatch = admin.username && username.trim().toLowerCase() === admin.username.toLowerCase();
-    if (!usernameMatch) {
-      return res.status(401).json({
+    if (!password) {
+      return res.status(400).json({
         success: false,
-        message: 'اسم المستخدم غير صحيح.',
+        message: 'كلمة المرور مطلوبة.',
       });
+    }
+
+    // إن أُرسل اسم المستخدم نتحقق منه، وإلا نتجاوزه (توافق مع النسخة القديمة)
+    if (username !== undefined && username !== null && String(username).trim() !== '') {
+      const usernameMatch =
+        admin.username && String(username).trim().toLowerCase() === String(admin.username).toLowerCase();
+      if (!usernameMatch) {
+        return res.status(401).json({
+          success: false,
+          message: 'اسم المستخدم غير صحيح.',
+        });
+      }
     }
 
     // التحقق من كلمة المرور

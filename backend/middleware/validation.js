@@ -97,9 +97,12 @@ const settingsValidation = [
 
 /**
  * قواعد التحقق لتسجيل الدخول
+ * ملاحظة توافقية: اسم المستخدم اختياري على مستوى الخادم حتى تعمل
+ * النسخ القديمة المخزّنة (كاش) التي ترسل كلمة المرور فقط دون كسر،
+ * بينما الواجهة الجديدة تفرض الحقلين على مستوى المتصفح (required).
  */
 const loginValidation = [
-  body('username').trim().notEmpty().withMessage('اسم المستخدم مطلوب.'),
+  body('username').optional({ checkFalsy: true }).trim().notEmpty().withMessage('اسم المستخدم مطلوب.'),
   body('password').notEmpty().withMessage('كلمة المرور مطلوبة.'),
 ];
 
