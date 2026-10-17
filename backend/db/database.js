@@ -1,29 +1,105 @@
-const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+/**
+ * Database module - automatic dual mode:
+ * - If DATABASE_URL exists: PostgreSQL (production on Railway)
+ * - Otherwise: local SQLite (no setup needed - for development)
+ * Exported interface is identical in both cases: query / get / run / close / dbReady
+ */
+const USE_PG = Boolean(process.env.DATABASE_URL);
 
-async function query(text, params) {
-  const result = await pool.query(text, params);
-  return result.rows;
+let pool = null; // PostgreSQL
+let sqlite = null; // SQLite
+
+if (USE_PG) {
+  const { Pool } = require('pg');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+} else {
+  // ===== SQLite محلي =====
+  const path = require('path');
+  const fs = require('fs');
+  const { Database } = require('./sqliteCompat');
+
+  const DB_PATH = path.join(__dirname, 'realEstate.db');
+
+  function removeSidecars(p) {
+    ['-wal', '-shm', '-journal'].forEach((suffix) => {
+      try {
+        const sidecar = p + suffix;
+        if (fs.existsSync(sidecar)) fs.unlinkSync(sidecar);
+      } catch (e) { /* تجاهل */ }
+    });
+  }
+
+  function openDatabase(p) {
+    try {
+      return new Database(p);
+    } catch (err) {
+      console.error('⚠️ فشل فتح قاعدة البيانات، سيتم إنشاء نسخة جديدة:', err.message);
+      try {
+        const backup = p + '.corrupt-' + Date.now() + '.bak';
+        if (fs.existsSync(p)) fs.renameSync(p, backup);
+      } catch (e) { /* تجاهل */ }
+      removeSidecars(p);
+      return new Database(p);
+    }
+  }
+
+  removeSidecars(DB_PATH);
+  sqlite = openDatabase(DB_PATH);
+  try {
+    const wal = sqlite.pragma('journal_mode = WAL');
+    if (!wal || String(wal[0] && wal[0].journal_mode).toLowerCase() !== 'wal') {
+      sqlite.pragma('journal_mode = DELETE');
+    }
+  } catch (e) {
+    try { sqlite.pragma('journal_mode = DELETE'); } catch (e2) { /* تجاهل */ }
+  }
+  sqlite.pragma('foreign_keys = ON');
 }
 
-async function get(text, params) {
+// تحويل القيم المنطقية إلى 1/0 لتوافق SQLite
+function sanitizeParams(params) {
+  if (!params || params.length === 0) return [];
+  return params.map((p) => (p === true ? 1 : p === false ? 0 : p));
+}
+
+// تحويل علامات PostgreSQL ($1, $2…) إلى علامات SQLite الترتيبية (?)
+function toSqliteSql(text) {
+  return text.replace(/\$\d+/g, '?');
+}
+
+async function query(text, params = []) {
+  if (pool) {
+    const result = await pool.query(text, params);
+    return result.rows;
+  }
+  return sqlite.prepare(toSqliteSql(text)).all(...sanitizeParams(params));
+}
+
+async function get(text, params = []) {
   const rows = await query(text, params);
   return rows[0] || null;
 }
 
-async function run(text, params) {
-  const result = await pool.query(text, params);
-  return { changes: result.rowCount, lastInsertRowid: result.rows[0]?.id ?? 0 };
+async function run(text, params = []) {
+  if (pool) {
+    const result = await pool.query(text, params);
+    return { changes: result.rowCount, lastInsertRowid: result.rows[0]?.id ?? 0 };
+  }
+  const info = sqlite.prepare(toSqliteSql(text)).run(...sanitizeParams(params));
+  return { changes: info.changes, lastInsertRowid: info.lastInsertRowid };
 }
 
-async function close() { await pool.end(); }
+async function close() {
+  if (pool) await pool.end();
+  if (sqlite) sqlite.close();
+}
 
-async function initializeTables() {
+async function initializeTablesPg() {
   await query(`CREATE TABLE IF NOT EXISTS admin (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
@@ -107,6 +183,124 @@ async function initializeTables() {
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_created ON lands(createdAt DESC);`);
 }
 
+function initializeTablesSqlite() {
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS apartments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
+      mainTitle TEXT NOT NULL,
+      detailedAddress TEXT NOT NULL,
+      description TEXT,
+      price INTEGER NOT NULL,
+      floors INTEGER NOT NULL,
+      images TEXT NOT NULL DEFAULT '[]',
+      isFeatured INTEGER NOT NULL DEFAULT 0,
+      isHidden INTEGER NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS villas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
+      mainTitle TEXT NOT NULL,
+      detailedAddress TEXT NOT NULL,
+      description TEXT,
+      price INTEGER NOT NULL,
+      area INTEGER NOT NULL,
+      rooms INTEGER NOT NULL,
+      images TEXT NOT NULL DEFAULT '[]',
+      isFeatured INTEGER NOT NULL DEFAULT 0,
+      isHidden INTEGER NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS lands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
+      mainTitle TEXT NOT NULL,
+      detailedAddress TEXT NOT NULL,
+      description TEXT,
+      price INTEGER NOT NULL,
+      area INTEGER NOT NULL,
+      images TEXT NOT NULL DEFAULT '[]',
+      isFeatured INTEGER NOT NULL DEFAULT 0,
+      isHidden INTEGER NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      contactPhone TEXT,
+      whatsappPhone TEXT,
+      companyName TEXT,
+      aboutText TEXT,
+      logoUrl TEXT,
+      facebookUrl TEXT,
+      aboutTitle TEXT,
+      aboutSubtitle TEXT,
+      aboutSection1Title TEXT,
+      aboutSection1Content TEXT,
+      aboutSection2Title TEXT,
+      aboutSection2Content TEXT,
+      aboutSection3Title TEXT,
+      aboutSection3Content TEXT,
+      aboutImageUrl TEXT,
+      theme TEXT DEFAULT 'dark',
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS admin (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE INDEX IF NOT EXISTS idx_apartments_type ON apartments(type);
+    CREATE INDEX IF NOT EXISTS idx_apartments_featured ON apartments(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_apartments_hidden ON apartments(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_apartments_created ON apartments(createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_villas_type ON villas(type);
+    CREATE INDEX IF NOT EXISTS idx_villas_featured ON villas(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_villas_hidden ON villas(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_villas_created ON villas(createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_lands_type ON lands(type);
+    CREATE INDEX IF NOT EXISTS idx_lands_featured ON lands(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_lands_hidden ON lands(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_lands_created ON lands(createdAt DESC);
+  `);
+
+  // ترقية تدريجية آمنة للجداول القديمة
+  ['apartments', 'villas', 'lands'].forEach((table) => {
+    const columns = sqlite.pragma(`table_info(${table})`);
+    if (!columns.some((col) => col.name === 'isHidden')) {
+      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN isHidden INTEGER NOT NULL DEFAULT 0`);
+    }
+  });
+  const settingsColumns = sqlite.pragma('table_info(settings)').map((col) => col.name);
+  [
+    'whatsappPhone', 'logoUrl', 'facebookUrl', 'aboutTitle', 'aboutSubtitle',
+    'aboutSection1Title', 'aboutSection1Content', 'aboutSection2Title',
+    'aboutSection2Content', 'aboutSection3Title', 'aboutSection3Content',
+    'aboutImageUrl',
+  ].forEach((col) => {
+    if (!settingsColumns.includes(col)) {
+      sqlite.exec(`ALTER TABLE settings ADD COLUMN ${col} TEXT`);
+    }
+  });
+  if (!settingsColumns.includes('theme')) {
+    sqlite.exec("ALTER TABLE settings ADD COLUMN theme TEXT DEFAULT 'dark'");
+  }
+}
+
 async function seedInitialData() {
   const settingsCount = await get('SELECT COUNT(*) AS count FROM settings');
   if (settingsCount.count === 0) {
@@ -127,10 +321,16 @@ async function seedInitialData() {
   }
 }
 
-const dbReady = initializeTables()
-  .then(() => seedInitialData())
-  .catch((err) => {
-    console.error('⚠️ فشل تهيئة قاعدة البيانات:', err.message);
-  });
+const dbReady = (async () => {
+  if (pool) {
+    await initializeTablesPg();
+  } else {
+    initializeTablesSqlite();
+  }
+  await seedInitialData();
+  console.log('✅ قاعدة البيانات جاهزة (' + (USE_PG ? 'PostgreSQL' : 'SQLite محلي') + ')');
+})().catch((err) => {
+  console.error('⚠️ فشل تهيئة قاعدة البيانات:', err.message);
+});
 
 module.exports = { query, get, run, close, dbReady };

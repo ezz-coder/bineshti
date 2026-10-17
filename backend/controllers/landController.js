@@ -23,13 +23,13 @@ async function getAllLands(req, res) {
   const limitNum = parseInt(limit, 10) || 12;
   const includeHiddenBool = includeHidden === 'true';
 
-  const result = landModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  const result = await landModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
   res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/lands/:id - تفاصيل أرض واحدة
 async function getLandById(req, res) {
-  const land = landModel.getById(req.params.id);
+  const land = await landModel.getById(req.params.id);
   if (!land) {
     return res.status(404).json({ success: false, message: 'الأرض غير موجودة.' });
   }
@@ -41,7 +41,7 @@ async function getLandById(req, res) {
 // POST /api/admin/lands - إضافة أرض جديدة
 async function createLand(req, res) {
   const images = buildImagePaths(req);
-  const land = landModel.create({
+  const land = await landModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -57,7 +57,7 @@ async function createLand(req, res) {
 
 // PUT /api/admin/lands/:id - تعديل أرض
 async function updateLand(req, res) {
-  const existing = landModel.getById(req.params.id);
+  const existing = await landModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الأرض غير موجودة.' });
   }
@@ -67,7 +67,7 @@ async function updateLand(req, res) {
   const imagesToDelete = getImagesToDelete(existing.images, images);
   deleteImageFiles(imagesToDelete);
 
-  const updated = landModel.update(req.params.id, {
+  const updated = await landModel.update(req.params.id, {
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -83,38 +83,38 @@ async function updateLand(req, res) {
 
 // DELETE /api/admin/lands/:id - حذف أرض
 async function deleteLand(req, res) {
-  const existing = landModel.getById(req.params.id);
+  const existing = await landModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الأرض غير موجودة.' });
   }
 
   deleteImageFiles(existing.images);
 
-  landModel.remove(req.params.id);
+  await landModel.remove(req.params.id);
   res.status(200).json({ success: true, message: 'تم حذف الأرض بنجاح.' });
 }
 
 // PUT /api/admin/lands/:id/featured - تغيير حالة المميز
 async function setLandFeatured(req, res) {
-  const existing = landModel.getById(req.params.id);
+  const existing = await landModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الأرض غير موجودة.' });
   }
 
   const isFeatured = req.body.isFeatured === true || req.body.isFeatured === 'true';
-  const updated = landModel.setFeatured(req.params.id, isFeatured);
+  const updated = await landModel.setFeatured(req.params.id, isFeatured);
   res.status(200).json({ success: true, message: 'تم تحديث حالة المميز.', data: updated });
 }
 
 // PUT /api/admin/lands/:id/hidden - تغيير حالة الإخفاء
 async function setLandHidden(req, res) {
-  const existing = landModel.getById(req.params.id);
+  const existing = await landModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الأرض غير موجودة.' });
   }
 
   const isHidden = req.body.isHidden === true || req.body.isHidden === 'true';
-  const updated = landModel.setHidden(req.params.id, isHidden);
+  const updated = await landModel.setHidden(req.params.id, isHidden);
   res.status(200).json({ success: true, message: 'تم تحديث حالة الإخفاء.', data: updated });
 }
 

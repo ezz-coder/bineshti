@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const path = require('path');
 const express = require('express');
@@ -16,6 +16,8 @@ const adminRoutes = require('./routes/admin');
 
 const { securityHeaders } = require('./middleware/securityHeaders');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { login } = require('./controllers/adminController');
+const { loginValidation, handleValidation } = require('./middleware/validation');
 
 require('./db/database');
 
@@ -45,6 +47,16 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
+// نسخة البناء — للتأكد أن Railway يشغّل أحدث كود
+app.get('/api/version', (req, res) => {
+  res.json({
+    success: true,
+    build: '2026-10-17-login-v3',
+    loginFields: ['username', 'password'],
+    loginEndpoint: 'POST /api/admin/login',
+  });
+});
+
 app.use('/api/apartments', apartmentsRoutes);
 app.use('/api/villas', villasRoutes);
 app.use('/api/lands', landsRoutes);
@@ -52,6 +64,9 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/featured', featuredRoutes);
 app.use('/api/admin', adminRoutes);
+
+// مسار احتياطي: بعض النسخ القديمة من الواجهة تستدعي /admin/login مباشرة (بدون /api)
+app.post('/admin/login', loginValidation, handleValidation, login);
 
 // مسارات /api غير المطابقة تُرجع JSON دائماً (حتى في الإنتاج)
 app.use('/api', notFoundHandler);
@@ -69,6 +84,12 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+
+// حماية من تحطم السيرفر بسبب رفض وعد غير معالج (مثل خطأ غير متوقع في متحكم async)
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ رفض وعد غير معالج (تم تجاهله):', reason);
+});
+
 dbReady.then(() => {
   app.listen(PORT, () => {
     console.log('Server running on port ' + PORT);

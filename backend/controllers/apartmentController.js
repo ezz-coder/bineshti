@@ -24,13 +24,13 @@ async function getAllApartments(req, res) {
   const limitNum = parseInt(limit, 10) || 12;
   const includeHiddenBool = includeHidden === 'true';
   
-  const result = apartmentModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  const result = await apartmentModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
   res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/apartments/:id - تفاصيل شقة واحدة
 async function getApartmentById(req, res) {
-  const apartment = apartmentModel.getById(req.params.id);
+  const apartment = await apartmentModel.getById(req.params.id);
   if (!apartment) {
     return res.status(404).json({ success: false, message: 'الشقة غير موجودة.' });
   }
@@ -42,7 +42,7 @@ async function getApartmentById(req, res) {
 // POST /api/admin/apartments - إضافة شقة جديدة
 async function createApartment(req, res) {
   const images = buildImagePaths(req);
-  const apartment = apartmentModel.create({
+  const apartment = await apartmentModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -58,7 +58,7 @@ async function createApartment(req, res) {
 
 // PUT /api/admin/apartments/:id - تعديل شقة
 async function updateApartment(req, res) {
-  const existing = apartmentModel.getById(req.params.id);
+  const existing = await apartmentModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الشقة غير موجودة.' });
   }
@@ -69,7 +69,7 @@ async function updateApartment(req, res) {
   const imagesToDelete = getImagesToDelete(existing.images, images);
   deleteImageFiles(imagesToDelete);
 
-  const updated = apartmentModel.update(req.params.id, {
+  const updated = await apartmentModel.update(req.params.id, {
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -85,7 +85,7 @@ async function updateApartment(req, res) {
 
 // DELETE /api/admin/apartments/:id - حذف شقة
 async function deleteApartment(req, res) {
-  const existing = apartmentModel.getById(req.params.id);
+  const existing = await apartmentModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الشقة غير موجودة.' });
   }
@@ -93,31 +93,31 @@ async function deleteApartment(req, res) {
   // حذف الصور المرتبطة من التخزين
   deleteImageFiles(existing.images);
 
-  apartmentModel.remove(req.params.id);
+  await apartmentModel.remove(req.params.id);
   res.status(200).json({ success: true, message: 'تم حذف الشقة بنجاح.' });
 }
 
 // PUT /api/admin/apartments/:id/featured - تغيير حالة المميز
 async function setApartmentFeatured(req, res) {
-  const existing = apartmentModel.getById(req.params.id);
+  const existing = await apartmentModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الشقة غير موجودة.' });
   }
 
   const isFeatured = req.body.isFeatured === true || req.body.isFeatured === 'true';
-  const updated = apartmentModel.setFeatured(req.params.id, isFeatured);
+  const updated = await apartmentModel.setFeatured(req.params.id, isFeatured);
   res.status(200).json({ success: true, message: 'تم تحديث حالة المميز.', data: updated });
 }
 
 // PUT /api/admin/apartments/:id/hidden - تغيير حالة الإخفاء
 async function setApartmentHidden(req, res) {
-  const existing = apartmentModel.getById(req.params.id);
+  const existing = await apartmentModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الشقة غير موجودة.' });
   }
 
   const isHidden = req.body.isHidden === true || req.body.isHidden === 'true';
-  const updated = apartmentModel.setHidden(req.params.id, isHidden);
+  const updated = await apartmentModel.setHidden(req.params.id, isHidden);
   res.status(200).json({ success: true, message: 'تم تحديث حالة الإخفاء.', data: updated });
 }
 

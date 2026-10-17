@@ -24,7 +24,7 @@ function authenticate(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Benishaty_Dev_Secret_2026');
     req.admin = decoded; // تخزين بيانات المدير المفكوكة في الطلب
     next();
   } catch (error) {

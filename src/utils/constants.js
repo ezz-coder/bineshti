@@ -2,7 +2,12 @@
 export const APP_NAME = import.meta.env.VITE_APP_NAME || 'بي نيشتي للاستثمار العقاري';
 
 // أصل الـ API (بدون اللاحقة /api) — يُستخدم لبناء روابط الصور المخزّنة كمسارات نسبية مثل /uploads/xxx.jpg
-export const API_ORIGIN = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
+// في الإنتاج (نفس الدومين) نُرجع سلسلة فارغة ليُبنى الرابط نسبياً لنفس الدومين —
+// مهم: VITE_API_URL على Railway قد تكون localhost قديمة، فلا نعتمد عليها في الإنتاج.
+export const API_ORIGIN =
+  import.meta.env.MODE === 'production'
+    ? ''
+    : (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
 
 /**
  * تحويل مسار صورة نسبي (أو مطلق) إلى رابط صالح للعرض في المتصفح.

@@ -23,13 +23,13 @@ async function getAllVillas(req, res) {
   const limitNum = parseInt(limit, 10) || 12;
   const includeHiddenBool = includeHidden === 'true';
 
-  const result = villaModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
+  const result = await villaModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
   res.status(200).json({ success: true, ...result });
 }
 
 // GET /api/villas/:id - تفاصيل فيلا واحدة
 async function getVillaById(req, res) {
-  const villa = villaModel.getById(req.params.id);
+  const villa = await villaModel.getById(req.params.id);
   if (!villa) {
     return res.status(404).json({ success: false, message: 'الفيلا غير موجودة.' });
   }
@@ -41,7 +41,7 @@ async function getVillaById(req, res) {
 // POST /api/admin/villas - إضافة فيلا جديدة
 async function createVilla(req, res) {
   const images = buildImagePaths(req);
-  const villa = villaModel.create({
+  const villa = await villaModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -58,7 +58,7 @@ async function createVilla(req, res) {
 
 // PUT /api/admin/villas/:id - تعديل فيلا
 async function updateVilla(req, res) {
-  const existing = villaModel.getById(req.params.id);
+  const existing = await villaModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الفيلا غير موجودة.' });
   }
@@ -68,7 +68,7 @@ async function updateVilla(req, res) {
   const imagesToDelete = getImagesToDelete(existing.images, images);
   deleteImageFiles(imagesToDelete);
 
-  const updated = villaModel.update(req.params.id, {
+  const updated = await villaModel.update(req.params.id, {
     type: req.body.type,
     mainTitle: req.body.mainTitle,
     detailedAddress: req.body.detailedAddress,
@@ -85,38 +85,38 @@ async function updateVilla(req, res) {
 
 // DELETE /api/admin/villas/:id - حذف فيلا
 async function deleteVilla(req, res) {
-  const existing = villaModel.getById(req.params.id);
+  const existing = await villaModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الفيلا غير موجودة.' });
   }
 
   deleteImageFiles(existing.images);
 
-  villaModel.remove(req.params.id);
+  await villaModel.remove(req.params.id);
   res.status(200).json({ success: true, message: 'تم حذف الفيلا بنجاح.' });
 }
 
 // PUT /api/admin/villas/:id/featured - تغيير حالة المميز
 async function setVillaFeatured(req, res) {
-  const existing = villaModel.getById(req.params.id);
+  const existing = await villaModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الفيلا غير موجودة.' });
   }
 
   const isFeatured = req.body.isFeatured === true || req.body.isFeatured === 'true';
-  const updated = villaModel.setFeatured(req.params.id, isFeatured);
+  const updated = await villaModel.setFeatured(req.params.id, isFeatured);
   res.status(200).json({ success: true, message: 'تم تحديث حالة المميز.', data: updated });
 }
 
 // PUT /api/admin/villas/:id/hidden - تغيير حالة الإخفاء
 async function setVillaHidden(req, res) {
-  const existing = villaModel.getById(req.params.id);
+  const existing = await villaModel.getById(req.params.id);
   if (!existing) {
     return res.status(404).json({ success: false, message: 'الفيلا غير موجودة.' });
   }
 
   const isHidden = req.body.isHidden === true || req.body.isHidden === 'true';
-  const updated = villaModel.setHidden(req.params.id, isHidden);
+  const updated = await villaModel.setHidden(req.params.id, isHidden);
   res.status(200).json({ success: true, message: 'تم تحديث حالة الإخفاء.', data: updated });
 }
 

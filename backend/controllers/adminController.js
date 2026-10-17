@@ -10,57 +10,65 @@ const { JWT_EXPIRES_IN_SECONDS } = require('../config/constants');
 
 // POST /api/admin/login - تسجيل الدخول
 async function login(req, res) {
-  const { username, password } = req.body;
+  try {
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'اسم المستخدم وكلمة المرور مطلوبان.',
+      });
+    }
+
+    // جلب حساب المدير
+    const admin = await get('SELECT * FROM admin ORDER BY id LIMIT 1');
+
+    if (!admin) {
+      return res.status(500).json({
+        success: false,
+        message: 'لم يتم إعداد حساب المدير.',
+      });
+    }
+
+    // التحقق من اسم المستخدم
+    const usernameMatch = admin.username && username.trim().toLowerCase() === admin.username.toLowerCase();
+    if (!usernameMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'اسم المستخدم غير صحيح.',
+      });
+    }
+
+    // التحقق من كلمة المرور
+    const isMatch = bcrypt.compareSync(password, admin.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'كلمة المرور غير صحيحة.',
+      });
+    }
+
+    // إنشاء توكن JWT صالح لمدة 24 ساعة
+    const token = jwt.sign(
+      { id: admin.id, role: 'admin' },
+      process.env.JWT_SECRET || 'Benishaty_Dev_Secret_2026',
+      { expiresIn: JWT_EXPIRES_IN_SECONDS }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'تم تسجيل الدخول بنجاح.',
+      token,
+      expiresIn: JWT_EXPIRES_IN_SECONDS,
+    });
+  } catch (error) {
+    console.error('خطأ في تسجيل الدخول:', error);
+    res.status(500).json({
       success: false,
-      message: 'اسم المستخدم وكلمة المرور مطلوبان.',
+      message: 'حدث خطأ في الخادم أثناء تسجيل الدخول.',
     });
   }
-
-  // جلب حساب المدير
-  const admin = await get('SELECT * FROM admin ORDER BY id LIMIT 1');
-
-  if (!admin) {
-    return res.status(500).json({
-      success: false,
-      message: 'لم يتم إعداد حساب المدير.',
-    });
-  }
-
-  // التحقق من اسم المستخدم
-  const usernameMatch = admin.username && username.trim().toLowerCase() === admin.username.toLowerCase();
-  if (!usernameMatch) {
-    return res.status(401).json({
-      success: false,
-      message: 'اسم المستخدم غير صحيح.',
-    });
-  }
-
-  // التحقق من كلمة المرور
-  const isMatch = bcrypt.compareSync(password, admin.password);
-
-  if (!isMatch) {
-    return res.status(401).json({
-      success: false,
-      message: 'كلمة المرور غير صحيحة.',
-    });
-  }
-
-  // إنشاء توكن JWT صالح لمدة 24 ساعة
-  const token = jwt.sign(
-    { id: admin.id, role: 'admin' },
-    process.env.JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN_SECONDS }
-  );
-
-  res.status(200).json({
-    success: true,
-    message: 'تم تسجيل الدخول بنجاح.',
-    token,
-    expiresIn: JWT_EXPIRES_IN_SECONDS,
-  });
 }
 
 // PUT /api/admin/credentials - تحديث بيانات الدخول بشكل آمن
