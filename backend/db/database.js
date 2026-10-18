@@ -72,10 +72,45 @@ function toSqliteSql(text) {
   return text.replace(/\$\d+/g, '?');
 }
 
+// PostgreSQL يطوي أسماء الأعمدة غير المُقتبسة إلى حروف صغيرة (mainTitle → maintitle)،
+// لذا يعود كل صف من SELECT * بمفاتيح صغيرة لا تطابق الكود المشترك مع SQLite.
+// نُعيد هنا المفاتيح إلى صيغة camelCase الأصلية.
+const PG_COLUMN_NAMES = {
+  contactphone: 'contactPhone',
+  whatsappphone: 'whatsappPhone',
+  companyname: 'companyName',
+  aboutext: 'aboutText',
+  logourl: 'logoUrl',
+  facebookurl: 'facebookUrl',
+  abouttitle: 'aboutTitle',
+  aboutsubtitle: 'aboutSubtitle',
+  aboutsection1title: 'aboutSection1Title',
+  aboutsection1content: 'aboutSection1Content',
+  aboutsection2title: 'aboutSection2Title',
+  aboutsection2content: 'aboutSection2Content',
+  aboutsection3title: 'aboutSection3Title',
+  aboutsection3content: 'aboutSection3Content',
+  aboutimageurl: 'aboutImageUrl',
+  maintitle: 'mainTitle',
+  detailedaddress: 'detailedAddress',
+  isfeatured: 'isFeatured',
+  ishidden: 'isHidden',
+  createdat: 'createdAt',
+  updatedat: 'updatedAt',
+};
+
+function normalizePgRow(row) {
+  const normalized = {};
+  Object.keys(row).forEach((key) => {
+    normalized[PG_COLUMN_NAMES[key] || key] = row[key];
+  });
+  return normalized;
+}
+
 async function query(text, params = []) {
   if (pool) {
     const result = await pool.query(text, params);
-    return result.rows;
+    return result.rows.map(normalizePgRow);
   }
   return sqlite.prepare(toSqliteSql(text)).all(...sanitizeParams(params));
 }

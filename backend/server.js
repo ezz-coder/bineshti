@@ -89,7 +89,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/version', (req, res) => {
   res.json({
     success: true,
-    build: '2026-10-17-login-v3',
+    build: '2026-10-18-pg-keys-v4',
     loginFields: ['username', 'password'],
     loginEndpoint: 'POST /api/admin/login',
   });
