@@ -1,4 +1,4 @@
-﻿import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { IconBuilding, IconHome, IconInfo, IconLand, IconVilla } from './icons';
@@ -25,15 +25,17 @@ export default function BottomDock() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 transition-all duration-200 ${
+              `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-200 ${
                 isActive
                   ? 'bg-accent/15 text-accent shadow-glow'
                   : 'text-muted hover:bg-accent/5 hover:text-primary-glow'
               }`
             }
           >
-            <Icon className="h-6 w-6" />
-            <span className="text-xs font-semibold leading-none">{t(labelKey)}</span>
+            <Icon className="h-6 w-6 shrink-0" />
+            <span className="w-full text-center text-[10px] font-semibold leading-tight sm:text-xs">
+              {t(labelKey)}
+            </span>
           </NavLink>
         ))}
       </div>
