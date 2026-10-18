@@ -2,11 +2,22 @@ node_modules
 backend/node_modules
 dist
 .git
-.env
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
+.gitignore
+
+# متغيرات البيئة (يجب ألا تُنسخ داخل الصورة — الأسرار تُمرَّر عبر Railway Variables)
+**/.env
+**/.env.*
+!**/.env.example
+
+# قاعدة البيانات المحلية (لا تُنسخ داخل الصورة)
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+**/*.corrupt-*.bak
+
+# الصور المرفوعة محليًا
 backend/uploads/*
 !backend/uploads/.gitkeep
+
 *.log

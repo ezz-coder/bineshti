@@ -8,8 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # تثبيت كل الاعتماديات (بما فيها dev مثل vite اللازم للبناء)
+# ملاحظة: نستخدم npm install بدل npm ci لأن package-lock.json قد يكون غير متزامن
+# مع package.json (يفشل npm ci عند أي اختلاف)، فيعيد npm install المزامنة تلقائياً.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 
 # نسخ الكود وبناء الواجهة
 COPY . .
