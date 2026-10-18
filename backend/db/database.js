@@ -302,8 +302,10 @@ function initializeTablesSqlite() {
 }
 
 async function seedInitialData() {
+  // ملاحظة مهمة: في PostgreSQL تُرجع COUNT(*) نصاً (bigint) وليس رقماً،
+  // لذا يجب التحويل بـ Number() وإلا تفشل المقارنة ولا يُزرع حساب المدير.
   const settingsCount = await get('SELECT COUNT(*) AS count FROM settings');
-  if (settingsCount.count === 0) {
+  if (Number(settingsCount.count) === 0) {
     await query(
       `INSERT INTO settings (contactPhone, companyName, aboutText, updatedAt)
        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
@@ -311,7 +313,7 @@ async function seedInitialData() {
     );
   }
   const adminCount = await get('SELECT COUNT(*) AS count FROM admin');
-  if (adminCount.count === 0) {
+  if (Number(adminCount.count) === 0) {
     const plainPassword = process.env.ADMIN_PASSWORD || 'Bn@2026!Secure#';
     const hashedPassword = bcrypt.hashSync(plainPassword, 10);
     await query(
