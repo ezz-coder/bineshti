@@ -4,6 +4,9 @@ node_modules/
 # متغيرات البيئة
 .env
 
+# مفتاح JWT المولَّد تلقائياً (سر — لا يُرفع)
+.jwt-secret
+
 # قاعدة البيانات
 db/*.db
 db/*.db-journal

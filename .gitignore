@@ -16,6 +16,10 @@ npm-debug.log*
 .env.*.local
 *.local
 
+# مفتاح JWT المولَّد تلقائياً (سر — لا يُرفع)
+.jwt-secret
+**/.jwt-secret
+
 # Database (contains real data - never commit)
 *.db
 *.sqlite

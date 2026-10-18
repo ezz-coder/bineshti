@@ -1,5 +1,43 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+/**
+ * تعريف تلقائي لمفتاح JWT:
+ * إن لم يُضبط JWT_SECRET في متغيرات البيئة، نولّد مفتاحاً عشوائياً قوياً ونحفظه
+ * على القرص الدائم (بجوار مجلد الصور — على Volume Railway) لتبقى جلسات الدخول
+ * صالحة بعد إعادة التشغيل. إن تعذّر الحفظ نُستخدم مفتاحاً مؤقتاً للجلسة الحالية.
+ */
+(function ensureJwtSecret() {
+  if (process.env.JWT_SECRET && process.env.JWT_SECRET.trim()) return;
+
+  const fs = require('fs');
+  const path = require('path');
+  const crypto = require('crypto');
+
+  const dataDir = process.env.UPLOADS_DIR
+    ? path.dirname(process.env.UPLOADS_DIR)
+    : path.join(__dirname, 'db');
+  const secretPath = path.join(dataDir, '.jwt-secret');
+
+  try {
+    if (fs.existsSync(secretPath)) {
+      const saved = fs.readFileSync(secretPath, 'utf8').trim();
+      if (saved) {
+        process.env.JWT_SECRET = saved;
+        return;
+      }
+    }
+    const generated = crypto.randomBytes(48).toString('hex');
+    fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(secretPath, generated, { mode: 0o600 });
+    process.env.JWT_SECRET = generated;
+    console.log('🔐 تم توليد JWT_SECRET تلقائياً وحفظه في: ' + secretPath);
+  } catch (e) {
+    process.env.JWT_SECRET = crypto.randomBytes(48).toString('hex');
+    console.warn('⚠️ تعذّر حفظ JWT_SECRET على القرص، سيُستخدم مفتاح مؤقت:', e.message);
+  }
+})();
+
+
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
