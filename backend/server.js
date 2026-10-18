@@ -81,6 +81,12 @@ app.use('/uploads', express.static(UPLOADS_DIR, {
   immutable: true,
 }));
 
+// ملف غير موجود داخل /uploads: نُرجع 404 واضحاً بدل تسليم صفحة الواجهة (index.html)،
+// لأن إعادة صفحة HTML مكان الصورة تجعل المتصفح يعرضها كصورة مكسورة بلا سبب مفهوم.
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ success: false, message: 'الصورة غير موجودة على السيرفر.' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
