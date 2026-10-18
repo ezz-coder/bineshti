@@ -1,5 +1,5 @@
 const { query, get, run } = require('../db/database');
-const { deleteImageFiles } = require('./imageHelper');
+const { deleteImageFiles, getOptimizedImageUrl } = require('./imageHelper');
 
 /**
  * متحكم الإعدادات - العمليات العامة والتحديث من لوحة التحكم
@@ -95,7 +95,8 @@ async function updateSettings(req, res) {
 
   const imagesToDelete = [];
   if (logoFile) {
-    const newLogoPath = `/uploads/${logoFile.filename}`;
+    // نُخزّن النسخة المضغوطة (webp/jpg) إن وُلّدت من sharp، وإلا الأصلية المرفوعة.
+    const newLogoPath = getOptimizedImageUrl(`/uploads/${logoFile.filename}`);
     fields.push('logoUrl = $' + (values.length + 1));
     values.push(newLogoPath);
     // حفظ مسار الشعار القديم لحذفه من القرص بعد نجاح التحديث
@@ -104,7 +105,7 @@ async function updateSettings(req, res) {
     }
   }
   if (aboutImageFile) {
-    const newAboutImagePath = `/uploads/${aboutImageFile.filename}`;
+    const newAboutImagePath = getOptimizedImageUrl(`/uploads/${aboutImageFile.filename}`);
     fields.push('aboutImageUrl = $' + (values.length + 1));
     values.push(newAboutImagePath);
     // حفظ مسار الصورة القديمة لحذفها من القرص بعد نجاح التحديث
@@ -115,8 +116,12 @@ async function updateSettings(req, res) {
 
   if (!existing) {
     // إنشاء صف الإعدادات إن لم يوجد (القيم غير المُرسلة تبقى NULL)
-    const logoPath = logoFile ? `/uploads/${logoFile.filename}` : null;
-    const aboutImagePath = aboutImageFile ? `/uploads/${aboutImageFile.filename}` : null;
+    const logoPath = logoFile
+      ? getOptimizedImageUrl(`/uploads/${logoFile.filename}`)
+      : null;
+    const aboutImagePath = aboutImageFile
+      ? getOptimizedImageUrl(`/uploads/${aboutImageFile.filename}`)
+      : null;
     await query(
       `INSERT INTO settings (contactPhone, whatsappPhone, companyName, aboutText, facebookUrl, logoUrl,
         aboutTitle, aboutSubtitle,

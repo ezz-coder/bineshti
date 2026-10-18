@@ -155,12 +155,14 @@ router.get('/settings', getSettings);
 router.put('/settings/:field', updateSettings);
 
 // PUT /api/admin/settings - تحديث الإعدادات (يقبل FormData مع ملفي logo و aboutImage)
+// processImages يضغط ويصغّر الصور المرفوعة تلقائياً قبل حفظ مساراتها.
 router.put(
   '/settings',
   upload.fields([
     { name: 'logo', maxCount: 1 },
     { name: 'aboutImage', maxCount: 1 },
   ]),
+  processImages,
   settingsValidation,
   handleValidation,
   updateSettings

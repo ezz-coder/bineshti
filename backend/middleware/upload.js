@@ -44,7 +44,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   limits: {
-    fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE, // 5MB
+    fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE, // 25MB (تُضغط تلقائياً بعد الرفع)
     files: UPLOAD_CONFIG.MAX_FILES, // حد أقصى 10 صور
   },
   fileFilter,
@@ -130,9 +130,16 @@ async function processUploadedImages(files) {
 }
 
 //_middleware لمعالجة النتائج بعد الرفع
+// يدعم الحالتين: upload.array (req.files مصفوفة) و upload.fields (req.files كائن من المصفوفات).
 const processImages = async (req, res, next) => {
-  if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-    await processUploadedImages(req.files);
+  const files = Array.isArray(req.files)
+    ? req.files
+    : req.files && typeof req.files === 'object'
+      ? Object.values(req.files).flat().filter(Boolean)
+      : [];
+
+  if (files.length > 0) {
+    await processUploadedImages(files);
   }
   next();
 };

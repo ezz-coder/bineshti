@@ -10,7 +10,7 @@ function errorHandler(err, req, res, next) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'حجم الصورة يتجاوز الحد المسموح (5 ميجابايت كحد أقصى).',
+        message: 'حجم الصورة كبير جداً (الحد الأقصى 25 ميجابايت).',
       });
     }
     return res.status(400).json({
