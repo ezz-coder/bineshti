@@ -30,7 +30,7 @@ export default function Lands() {
         </div>
 
         {/* شريط الفلتر — Sticky تحت الهيدر مباشرة */}
-        <div className="glass-effect sticky top-36 z-10 border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-44">
+        <div className="glass-effect sticky top-40 z-10 border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-48">
           <div className="flex justify-center">
             <TypeToggle value={typeKey} onChange={setTypeKey} showAll />
           </div>

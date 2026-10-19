@@ -170,7 +170,7 @@ export default function Home() {
         </div>
 
         {/* فلتر نوع العقد (الكل / إيجار / تمليك) — Sticky تحت الهيدر */}
-        <div className="glass-effect sticky top-36 z-10 mb-8 flex justify-center border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-44 lg:mb-12">
+        <div className="glass-effect sticky top-40 z-10 mb-8 flex justify-center border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-48 lg:mb-12">
           <TypeToggle value={typeKey} onChange={setTypeKey} showAll />
         </div>
 

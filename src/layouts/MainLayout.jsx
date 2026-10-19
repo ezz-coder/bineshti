@@ -57,7 +57,7 @@ export default function MainLayout() {
   return (
     <div className="site-bg flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 pt-36 sm:pt-44">
+      <main className="flex-1 pt-40 sm:pt-48">
         <Outlet />
       </main>
       <BottomDock />

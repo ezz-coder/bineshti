@@ -24,18 +24,21 @@ export default function Header() {
     <header className="glass-header fixed inset-x-0 top-0 z-40">
       <SearchBar />
 
-      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-4 pt-10 sm:pt-12">
+      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-4 pt-8 sm:pt-10">
         <Link to="/about" className="group flex flex-col items-center">
           {logoUrl && !logoFailed ? (
             <>
-              <img
-                src={logoUrl}
-                alt="شعار بي نيشتي"
-                onError={() => setLogoFailed(true)}
-                className="h-14 w-14 rounded-full border-2 border-accent/50 bg-white object-contain p-1 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-90 group-hover:border-accent sm:h-20 sm:w-20"
-              />
+              {/* إطار رقيق متدرّج بلون الهوية حول الشعار (بدل الحلقة البيضاء) */}
+              <span className="logo-ring inline-flex transition-transform duration-300 group-hover:scale-105">
+                <img
+                  src={logoUrl}
+                  alt="شعار بي نيشتي"
+                  onError={() => setLogoFailed(true)}
+                  className="h-20 w-20 rounded-full object-contain sm:h-24 sm:w-24"
+                />
+              </span>
               {/* اسم الموقع في سطر واحد أسفل الشعار */}
-              <span className="mt-2.5 whitespace-nowrap text-xs font-bold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-sm">
+              <span className="mt-3 whitespace-nowrap text-sm font-bold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-base">
                 {t('site.name')}
               </span>
             </>

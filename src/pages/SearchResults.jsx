@@ -98,7 +98,7 @@ export default function SearchResults() {
   return (
     <section className="animate-fade-in">
       {/* ===== شريط البحث الثابت في الأعلى ===== */}
-      <div className="glass-effect sticky top-36 z-10 bg-sticky-bg shadow-sm sm:top-44">
+      <div className="glass-effect sticky top-40 z-10 bg-sticky-bg shadow-sm sm:top-48">
         <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <div className="flex h-11 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-soft-beige ring-1 ring-dark-gray/10 transition-all duration-300 focus-within:ring-accent/40">
