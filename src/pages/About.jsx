@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import useSiteSettings from '../hooks/useSiteSettings';
@@ -30,6 +31,16 @@ export default function About() {
   const aboutImageUrl = settings?.aboutImageUrl?.trim()
     ? resolveImageUrl(settings.aboutImageUrl)
     : '';
+
+  // إخفاء الصور بلطف إذا فشل تحميلها (ملف مفقود على السيرفر مثلاً) بدل أيقونة مكسورة.
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [aboutImageFailed, setAboutImageFailed] = useState(false);
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [logoUrl]);
+  useEffect(() => {
+    setAboutImageFailed(false);
+  }, [aboutImageUrl]);
 
   // النصوص الديناميكية (فارغ = لا يظهر)
   const aboutTitle = (settings?.aboutTitle || '').trim();
@@ -69,10 +80,11 @@ export default function About() {
         <div className="rounded-card border border-border bg-card p-6 shadow-sm sm:p-10">
           {/* ===== الشعار في إطار دائري + اسم الشركة (في مكانهما الطبيعي أعلى الصفحة) ===== */}
           <div className="flex flex-col items-center text-center">
-            {logoUrl ? (
+            {logoUrl && !logoFailed ? (
               <img
                 src={logoUrl}
                 alt="شعار بي نيشتي"
+                onError={() => setLogoFailed(true)}
                 className="h-32 w-32 rounded-full border-4 border-soft-blue object-contain shadow-lg transition-all duration-300 hover:scale-105 sm:h-36 sm:w-36 lg:h-40 lg:w-40"
               />
             ) : (
@@ -98,11 +110,12 @@ export default function About() {
           )}
 
           {/* ===== الصورة الإضافية (فوق أقسام النصوص — تظهر فقط إن وُجدت) ===== */}
-          {aboutImageUrl && (
+          {aboutImageUrl && !aboutImageFailed && (
             <div className="my-8 sm:my-12">
               <img
                 src={aboutImageUrl}
                 alt="صورة من نحن"
+                onError={() => setAboutImageFailed(true)}
                 className="mx-auto w-full max-w-2xl rounded-xl border-4 border-accent/20 object-cover shadow-lg transition-all duration-300 hover:scale-[1.01] hover:shadow-xl"
               />
             </div>

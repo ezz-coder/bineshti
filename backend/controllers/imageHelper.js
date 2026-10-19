@@ -112,8 +112,8 @@ function getOptimizedImageUrl(originalPath) {
     return `/uploads/${jpegPath}`;
   }
 
-  // والصورة الأصلية كآخر وسيلة
-  return `/uploads/${normalizedPath}`;
+  // والصورة الأصلية كآخر وسيلة (نُعيد المسار الأصلي كما هو لتفادي تكرار بادئة /uploads)
+  return originalPath;
 }
 
 module.exports = {
