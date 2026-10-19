@@ -57,8 +57,7 @@ export default function MainLayout() {
   return (
     <div className="site-bg flex min-h-screen flex-col">
       <Header />
-      {/* مسافة أعلى المحتوى تُدار عبر .site-main وتتبع ارتفاع الهيدر (متمدّد/مضغوط) */}
-      <main className="site-main flex-1">
+      <main className="flex-1 pt-40 sm:pt-48">
         <Outlet />
       </main>
       <BottomDock />
