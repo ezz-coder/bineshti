@@ -20,7 +20,7 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="absolute right-4 top-4 z-30">
+    <div className="absolute right-4 top-4 z-30 flex flex-col items-center">
       <div
         className={`flex h-10 items-center overflow-hidden rounded-full bg-card shadow-md ring-1 ring-dark-gray/10 transition-all duration-300 sm:h-11 ${
           open ? 'w-[calc(100vw-2rem)] max-w-sm' : 'w-10 sm:w-11'
@@ -60,6 +60,10 @@ export default function SearchBar() {
           </button>
         )}
       </div>
+      {/* نص توضيحي أسفل الزر ليتناسق مع زر تبديل الوضع على الجهة المقابلة */}
+      <span className="mt-1.5 whitespace-nowrap text-[10px] font-semibold text-dark-gray/70 sm:text-xs">
+        {t('search.buttonLabel')}
+      </span>
     </div>
   );
 }

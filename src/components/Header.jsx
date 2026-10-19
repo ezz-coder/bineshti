@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import useSiteSettings from '../hooks/useSiteSettings';
 import { resolveImageUrl } from '../utils/constants';
 import SearchBar from './SearchBar';
+import ThemeToggle from './ThemeToggle';
 
 // المنطقة العلوية: بحث (يمين) + لوغو ديناميكي في المنتصف (يوجه إلى /about).
 // يعرض صورة الشعار من الإعدادات إن وُجدت، وإلا يعرض النص الافتراضي.
@@ -23,6 +24,11 @@ export default function Header() {
   return (
     <header className="glass-header fixed inset-x-0 top-0 z-40">
       <SearchBar />
+
+      {/* زر تبديل الوضع (الثيم) الخاص بالمستخدم — على يسار الشريط بمقابل زر البحث */}
+      <div className="absolute left-4 top-4 z-20">
+        <ThemeToggle />
+      </div>
 
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-4 pt-8 sm:pt-10">
         <Link to="/about" className="group flex flex-col items-center">
