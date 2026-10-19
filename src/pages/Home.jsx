@@ -41,14 +41,19 @@ function filterByType(items, typeKey) {
 
 // ===== عنوان قسم مع رابط "عرض الكل" =====
 
-function SectionHeader({ title, to }) {
+function SectionHeader({ title, subtitle, to }) {
   return (
-    <div className="mb-4 flex items-center justify-between">
-      <h2 className="text-xl font-semibold text-dark-gray">{title}</h2>
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h2 className="text-xl font-semibold text-dark-gray">{title}</h2>
+        {subtitle && (
+          <p className="mt-1 text-sm leading-relaxed text-dark-gray/60 sm:text-base">{subtitle}</p>
+        )}
+      </div>
       {to && (
         <Link
           to={to}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-accent transition-all duration-300 hover:text-accent/80"
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-accent transition-all duration-300 hover:text-accent/80"
         >
           عرض الكل
           <IconArrowLeft className="h-4 w-4" />
@@ -62,7 +67,7 @@ function SectionHeader({ title, to }) {
 
 function PropertyGrid({ items, contactPhone, whatsappPhone }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 performance-grid">
+    <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2 lg:max-w-6xl">
       {items.map((item) => (
         <PropertyCard
           key={`${item.category}-${item.id}`}
@@ -165,17 +170,17 @@ export default function Home() {
         </div>
 
         {/* فلتر نوع العقد (الكل / إيجار / تمليك) — Sticky تحت الهيدر */}
-        <div className="glass-effect sticky top-40 z-10 mb-8 flex justify-center border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-48 lg:mb-12">
+        <div className="glass-effect sticky top-36 z-10 mb-8 flex justify-center border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-44 lg:mb-12">
           <TypeToggle value={typeKey} onChange={setTypeKey} showAll />
         </div>
 
-        {loading && <PropertySkeletonDisabled count={8} />}
+        {loading && <PropertySkeletonDisabled count={3} />}
 
         {!loading && (
           <>
             {/* العناصر المميزة */}
             <div className="mb-8 lg:mb-12">
-              <SectionHeader title={t('property.featured')} />
+              <SectionHeader title={t('property.featured')} subtitle={t('property.featuredSub')} />
               {visibleFeatured.length > 0 ? (
                 <PropertyGrid items={visibleFeatured} contactPhone={phone} whatsappPhone={whatsapp} />
               ) : (
@@ -187,7 +192,7 @@ export default function Home() {
 
             {/* أحدث العقارات — يفصلها خط خفيف عن قسم المميزة */}
             <div className="mt-8 border-t border-border pt-8 lg:mt-12 lg:pt-12">
-              <SectionHeader title={t('property.latest')} />
+              <SectionHeader title={t('property.latest')} subtitle={t('property.latestSub')} />
               {visibleRecent.length > 0 ? (
                 <PropertyGrid items={visibleRecent} contactPhone={phone} whatsappPhone={whatsapp} />
               ) : (

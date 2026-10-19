@@ -24,23 +24,26 @@ export default function Header() {
     <header className="glass-header fixed inset-x-0 top-0 z-40">
       <SearchBar />
 
-      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-6 pt-14 sm:pt-16">
+      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-4 pt-10 sm:pt-12">
         <Link to="/about" className="group flex flex-col items-center">
           {logoUrl && !logoFailed ? (
-            <img
-              src={logoUrl}
-              alt="شعار بي نيشتي"
-              onError={() => setLogoFailed(true)}
-              className="h-14 w-14 rounded-full border-2 border-accent/50 bg-white object-contain p-1 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-90 group-hover:border-accent sm:h-20 sm:w-20"
-            />
+            <>
+              <img
+                src={logoUrl}
+                alt="شعار بي نيشتي"
+                onError={() => setLogoFailed(true)}
+                className="h-14 w-14 rounded-full border-2 border-accent/50 bg-white object-contain p-1 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:opacity-90 group-hover:border-accent sm:h-20 sm:w-20"
+              />
+              {/* اسم الموقع في سطر واحد أسفل الشعار */}
+              <span className="mt-2.5 whitespace-nowrap text-xs font-bold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-sm">
+                {t('site.name')}
+              </span>
+            </>
           ) : (
-            <span className="text-lg font-extrabold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-3xl">
-              {t('site.short')}
+            <span className="whitespace-nowrap text-lg font-extrabold tracking-tight text-dark-gray transition-colors duration-200 group-hover:text-accent sm:text-3xl">
+              {t('site.name')}
             </span>
           )}
-          <span className="mt-1 text-xs font-medium text-dark-gray/60 sm:text-sm">
-            {t('site.tagline')}
-          </span>
         </Link>
       </div>
       {/* خط ضوئي خفيف أسفل الهيدر */}

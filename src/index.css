@@ -113,17 +113,27 @@
 @layer base {
   body {
     @apply font-arabic antialiased;
-    background: var(--body-bg);
-    background-attachment: fixed;
+    background-color: var(--c-bg);
     min-height: 100vh;
     color: var(--body-color);
   }
+
+  /* الخلفية المتدرّجة كطبقة ثابتة مستقلة.
+     أسرع بكثير من background-attachment: fixed التي تُعيد الرسم مع كل
+     تمرير وتسبب رعشة/تقطيع، خاصة على الشاشات الصغيرة. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--body-bg);
+    pointer-events: none;
+  }
 }
 
-/* حاوية الموقع الرئيسية: تتبع خلفية الثيم الحالي */
+/* حاوية الموقع الرئيسية: شفافة حتى تظهر خلفية الثيم الثابتة خلفها */
 .site-bg {
-  background: var(--body-bg);
-  background-attachment: fixed;
+  background: transparent;
 }
 
 /* ===== الزجاج الداكن (Dark Glassmorphism) ===== */
@@ -369,12 +379,6 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
-  }
-
-  /* Performance optimization for property grids */
-  .performance-grid {
-    content-visibility: auto;
-    contain-intrinsic-size: 0 500px;
   }
 }
 

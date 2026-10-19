@@ -34,7 +34,7 @@ function hasText(value) {
 
 // ===== معرض صور بسيط بسحب أفقي (scroll-snap) =====
 
-function ImageGallery({ images, alt, heightClass = 'h-32 sm:h-56' }) {
+function ImageGallery({ images, alt, mediaClass = 'aspect-[4/3] sm:aspect-[16/9]' }) {
   const scrollerRef = useRef(null);
   const [index, setIndex] = useState(0);
   const total = images.length;
@@ -51,7 +51,7 @@ function ImageGallery({ images, alt, heightClass = 'h-32 sm:h-56' }) {
   // لا توجد صور: اعرض عنصراً بديلاً أنيقاً (بدون فراغ أو كسر)
   if (total === 0) {
     return (
-      <div className={`relative flex ${heightClass} items-center justify-center overflow-hidden bg-soft-blue`}>
+      <div className={`relative flex ${mediaClass} items-center justify-center overflow-hidden bg-soft-blue`}>
         <div className="flex flex-col items-center gap-2 text-accent/60">
           <IconCamera className="h-8 w-8" />
           <span className="text-xs font-medium">لا توجد صور</span>
@@ -61,7 +61,7 @@ function ImageGallery({ images, alt, heightClass = 'h-32 sm:h-56' }) {
   }
 
   return (
-    <div className={`relative ${heightClass} overflow-hidden bg-soft-blue`}>
+    <div className={`relative ${mediaClass} overflow-hidden bg-soft-blue`}>
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
@@ -109,7 +109,7 @@ function Badge({ children, tone = 'neutral' }) {
   };
   return (
     <span
-      className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold ${tones[tone] || tones.neutral}`}
+      className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold sm:text-sm ${tones[tone] || tones.neutral}`}
     >
       {children}
     </span>
@@ -143,7 +143,7 @@ function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
     (category === 'villa' && hasPositiveNumber(rooms));
 
   return (
-    <article className="glass-effect flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+    <article className="glass-effect flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-card-hover">
       {/* 1) معرض الصور */}
       <Link to={detailPath} aria-label={mainTitle || 'تفاصيل العقار'}>
         <ImageGallery images={imagesList} alt={mainTitle || 'عقار'} />
@@ -202,40 +202,36 @@ function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
 
         {/* 7) الوصف المختصر */}
         {hasText(description) && (
-          <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-dark-gray/70 sm:text-base">{description}</p>
+          <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-dark-gray/70 sm:text-base">{description}</p>
         )}
 
-        {/* 8) الأزرار: اتصال + واتساب + التفاصيل */}
+        {/* 8) الأزرار: اتصال + واتساب + التفاصيل — كل زر في سطر كامل تحت الآخر */}
         <div className="mt-4 flex flex-col gap-2 border-t border-dark-gray/5 pt-4">
-          {(callHref || whatsappHref) && (
-            <div className="flex items-center gap-2">
-              {callHref && (
-                <a
-                  href={callHref}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-button bg-accent px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-accent/90 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
-                >
-                  <IconPhone className="h-4 w-4" />
-                  اتصال
-                </a>
-              )}
-              {whatsappHref && (
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-button bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-[#1fb857] active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
-                >
-                  تواصل واتساب
-                </a>
-              )}
-            </div>
+          {callHref && (
+            <a
+              href={callHref}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-button bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-accent/90 active:scale-95 sm:py-3 sm:text-base"
+            >
+              <IconPhone className="h-4 w-4 sm:h-5 sm:w-5" />
+              اتصال
+            </a>
+          )}
+          {whatsappHref && (
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-button bg-[#25D366] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#1fb857] active:scale-95 sm:py-3 sm:text-base"
+            >
+              تواصل واتساب
+            </a>
           )}
           <Link
             to={detailPath}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-button bg-soft-blue px-3 py-1.5 text-xs font-semibold text-dark-gray transition-all duration-200 hover:scale-105 hover:bg-soft-blue/70 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-button bg-soft-blue px-4 py-2.5 text-sm font-semibold text-dark-gray transition-all duration-300 hover:scale-[1.02] hover:bg-soft-blue/70 active:scale-95 sm:py-3 sm:text-base"
           >
             مزيد من التفاصيل
-            <IconArrowLeft className="h-4 w-4" />
+            <IconArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Link>
         </div>
       </div>

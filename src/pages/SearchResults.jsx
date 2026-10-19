@@ -98,7 +98,7 @@ export default function SearchResults() {
   return (
     <section className="animate-fade-in">
       {/* ===== شريط البحث الثابت في الأعلى ===== */}
-      <div className="glass-effect sticky top-40 z-10 bg-sticky-bg shadow-sm sm:top-48">
+      <div className="glass-effect sticky top-36 z-10 bg-sticky-bg shadow-sm sm:top-44">
         <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <div className="flex h-11 min-w-0 flex-1 items-center overflow-hidden rounded-full bg-soft-beige ring-1 ring-dark-gray/10 transition-all duration-300 focus-within:ring-accent/40">
@@ -199,9 +199,9 @@ export default function SearchResults() {
           </div>
         )}
 
-        {/* ===== قائمة النتائج (عمودية) ===== */}
+        {/* ===== قائمة النتائج (متجاوبة) ===== */}
         {!loading && !error && query && results.length > 0 && (
-          <div className="space-y-4 performance-grid">
+          <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2 lg:max-w-6xl">
             {results.map((item) => (
               <PropertyCard
                 key={`${item.category}-${item.id}`}

@@ -25,7 +25,7 @@ export default function BottomDock() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-200 ${
+              `flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-300 ${
                 isActive
                   ? 'bg-accent/15 text-accent shadow-glow'
                   : 'text-muted hover:bg-accent/5 hover:text-primary-glow'

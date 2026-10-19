@@ -22,19 +22,22 @@ export default function Apartments() {
   return (
     <section className="animate-fade-in">
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pb-20 lg:px-8">
-        <div className="mb-4 flex flex-col items-center">
+        <div className="mb-4 flex flex-col items-center text-center">
           <h1 className="text-2xl font-bold text-dark-gray sm:text-3xl">{category.name}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-dark-gray/60 sm:text-base">
+            {t('sections.apartment')}
+          </p>
         </div>
 
         {/* شريط الفلتر — Sticky تحت الهيدر مباشرة */}
-        <div className="glass-effect sticky top-40 z-10 border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-48">
+        <div className="glass-effect sticky top-36 z-10 border-b border-border bg-sticky-bg py-3 backdrop-blur-sm sm:top-44">
           <div className="flex justify-center">
             <TypeToggle value={typeKey} onChange={setTypeKey} showAll />
           </div>
         </div>
 
         <div className="mt-8">
-          {loading && <PropertySkeletonDisabled count={8} />}
+          {loading && <PropertySkeletonDisabled count={3} />}
 
           {!loading && error && (
             <p className="py-16 text-center text-sm font-medium text-dark-gray/60">
@@ -49,7 +52,7 @@ export default function Apartments() {
           )}
 
           {!loading && !error && items.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 performance-grid">
+            <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2 lg:max-w-6xl">
               {items.map((item) => (
                 <PropertyCard
                   key={item.id}
