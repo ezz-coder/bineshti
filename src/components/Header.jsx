@@ -21,6 +21,40 @@ export default function Header() {
     setLogoFailed(false);
   }, [logoUrl]);
 
+  // تقليص الهيدر تدريجياً عند التمرير: نقرأ موضع التمرير مرة واحدة لكل إطار
+  // (requestAnimationFrame) ونبدّل حالة واحدة، ليتكفّل CSS بالانتقال الناعم
+  // بدل الحساب مع كل حدث تمرير — أخف بكثير على الأداء.
+  const [condensed, setCondensed] = useState(false);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      setCondensed(window.scrollY > 24);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // الحالة تُوضع على <html> ليتحرّك ارتفاع الشريط التسويقي ومسافة المحتوى معاً.
+  useEffect(() => {
+    document.documentElement.classList.toggle('header-condensed', condensed);
+  }, [condensed]);
+
+  // تنظيف عند مغادرة الصفحات العامة (لوحة التحكم مثلاً) حتى لا تبقى الحالة.
+  useEffect(
+    () => () => document.documentElement.classList.remove('header-condensed'),
+    []
+  );
+
   return (
     <header className="glass-header fixed inset-x-0 top-0 z-40">
       <SearchBar />
@@ -54,6 +88,16 @@ export default function Header() {
             </span>
           )}
         </Link>
+
+        {/* الشريط التسويقي: يظهر أعلى الصفحة ثم يتقلّص تدريجياً عند النزول،
+            ويبقى الشعار وزر البحث وزر الوضع في أماكنهم تماماً. */}
+        <div
+          className={`header-promo${condensed ? ' is-condensed' : ''}`}
+          aria-hidden={condensed}
+        >
+          <p className="header-promo__title">{t('header.promoTitle')}</p>
+          <p className="header-promo__sub">{t('header.promoSub')}</p>
+        </div>
       </div>
       {/* خط ضوئي خفيف أسفل الهيدر */}
       <div className="header-glow-line" aria-hidden="true" />
