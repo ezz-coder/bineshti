@@ -49,7 +49,7 @@ export default function SearchResults() {
       try {
         const res = await api.get('/search', { params: { q: query, page } });
         const data = res?.data?.data || {};
-        // دمج الأقسام الثلاثة في قائمة واحدة مع ضمان وجود category لكل بطاقة
+        // دمج الأقسام في قائمة واحدة مع ضمان وجود category لكل بطاقة
         const merged = [
           ...(Array.isArray(data.apartments) ? data.apartments : []).map((p) => ({
             ...p,
@@ -58,6 +58,10 @@ export default function SearchResults() {
           ...(Array.isArray(data.villas) ? data.villas : []).map((p) => ({
             ...p,
             category: p.category || 'villa',
+          })),
+          ...(Array.isArray(data.houses) ? data.houses : []).map((p) => ({
+            ...p,
+            category: p.category || 'house',
           })),
           ...(Array.isArray(data.lands) ? data.lands : []).map((p) => ({
             ...p,

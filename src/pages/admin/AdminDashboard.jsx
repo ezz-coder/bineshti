@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { IconBuilding, IconLand, IconPlus, IconVilla } from '../../components/icons';
+import { IconBuilding, IconHouse, IconLand, IconPlus, IconVilla } from '../../components/icons';
 import { adminApi, getApiErrorMessage } from '../../services/api';
 import { APP_NAME } from '../../utils/constants';
 
@@ -27,22 +27,24 @@ function SectionCard({ to, Icon, title, count }) {
  * الصفحة الرئيسية للوحة التحكم: نظرة عامة على الأقسام وعدد العقارات.
  */
 export default function AdminDashboard() {
-  const [counts, setCounts] = useState({ apartment: null, villa: null, land: null });
+  const [counts, setCounts] = useState({ apartment: null, villa: null, house: null, land: null });
   const [error, setError] = useState('');
 
   useEffect(() => {
     let active = true;
     async function load() {
       try {
-        const [apt, villa, land] = await Promise.all([
+        const [apt, villa, house, land] = await Promise.all([
           adminApi.get('/apartments?includeHidden=true'),
           adminApi.get('/villas?includeHidden=true'),
+          adminApi.get('/houses?includeHidden=true'),
           adminApi.get('/lands?includeHidden=true'),
         ]);
         if (!active) return;
         setCounts({
           apartment: apt?.data?.data?.length ?? 0,
           villa: villa?.data?.data?.length ?? 0,
+          house: house?.data?.data?.length ?? 0,
           land: land?.data?.data?.length ?? 0,
         });
       } catch (err) {
@@ -68,9 +70,10 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SectionCard to="/admin/apartments" Icon={IconBuilding} title="الشقق" count={counts.apartment} />
         <SectionCard to="/admin/villas" Icon={IconVilla} title="الفلل" count={counts.villa} />
+        <SectionCard to="/admin/houses" Icon={IconHouse} title="البيوت" count={counts.house} />
         <SectionCard to="/admin/lands" Icon={IconLand} title="الأراضي" count={counts.land} />
       </div>
 

@@ -99,7 +99,7 @@ function DetailRow({ Icon, label, value }) {
 
 
 // ===== صفحة تفاصيل العقار =====
-// category: 'apartment' | 'villa' | 'land' (تُمرّر من المسار في App.jsx)
+// category: 'apartment' | 'villa' | 'house' | 'land' (تُمرّر من المسار في App.jsx)
 
 export default function PropertyDetails({ category }) {
   const { t } = useTranslation();
@@ -214,19 +214,25 @@ export default function PropertyDetails({ category }) {
   if (category === 'apartment' && hasPositiveNumber(floors)) {
     detailRows.push({ Icon: IconLayers, label: t('property.floors'), value: `${floors}` });
   }
-  if ((category === 'villa' || category === 'land') && hasPositiveNumber(area)) {
+  if ((category === 'villa' || category === 'house' || category === 'land') && hasPositiveNumber(area)) {
     detailRows.push({
       Icon: IconRuler,
       label: t('property.area'),
       value: `${area} ${t('property.sqm')}`,
     });
   }
-  if (category === 'villa' && hasPositiveNumber(rooms)) {
+  if ((category === 'villa' || category === 'house') && hasPositiveNumber(rooms)) {
     detailRows.push({ Icon: IconBed, label: t('property.rooms'), value: `${rooms}` });
   }
 
   const backPath =
-    category === 'apartment' ? '/apartments' : category === 'villa' ? '/villas' : '/lands';
+    category === 'apartment'
+      ? '/apartments'
+      : category === 'villa'
+        ? '/villas'
+        : category === 'house'
+          ? '/houses'
+          : '/lands';
 
   return (
     <section className="animate-fade-in">

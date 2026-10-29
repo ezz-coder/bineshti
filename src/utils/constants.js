@@ -34,5 +34,6 @@ export const TYPE_LABEL_MAP = {
 export const CATEGORIES = {
   apartment: { basePath: '/apartment', endpoint: '/apartments', adminEndpoint: '/admin/apartments', name: 'شقق' },
   villa: { basePath: '/villa', endpoint: '/villas', adminEndpoint: '/admin/villas', name: 'فلل' },
+  house: { basePath: '/house', endpoint: '/houses', adminEndpoint: '/admin/houses', name: 'بيوت' },
   land: { basePath: '/land', endpoint: '/lands', adminEndpoint: '/admin/lands', name: 'أراضي فارغة' },
 };

@@ -46,6 +46,7 @@ const compression = require('compression');
 
 const apartmentsRoutes = require('./routes/apartments');
 const villasRoutes = require('./routes/villas');
+const housesRoutes = require('./routes/houses');
 const landsRoutes = require('./routes/lands');
 const settingsRoutes = require('./routes/settings');
 const searchRoutes = require('./routes/search');
@@ -95,7 +96,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/version', (req, res) => {
   res.json({
     success: true,
-    build: '2026-10-29-hidden-fix-v7',
+    build: '2026-10-30-houses-v8',
     loginFields: ['username', 'password'],
     loginEndpoint: 'POST /api/admin/login',
   });
@@ -103,6 +104,7 @@ app.get('/api/version', (req, res) => {
 
 app.use('/api/apartments', apartmentsRoutes);
 app.use('/api/villas', villasRoutes);
+app.use('/api/houses', housesRoutes);
 app.use('/api/lands', landsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/search', searchRoutes);

@@ -5,6 +5,7 @@ import {
   IconBuilding,
   IconClose,
   IconHome,
+  IconHouse,
   IconLand,
   IconLogout,
   IconMenu,
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/admin', label: 'الرئيسية', Icon: IconHome, end: true },
   { to: '/admin/apartments', label: 'إدارة الشقق', Icon: IconBuilding },
   { to: '/admin/villas', label: 'إدارة الفلل', Icon: IconVilla },
+  { to: '/admin/houses', label: 'إدارة البيوت', Icon: IconHouse },
   { to: '/admin/lands', label: 'إدارة الأراضي', Icon: IconLand },
   { to: '/admin/settings', label: 'الإعدادات', Icon: IconSettings },
 ];
@@ -105,7 +107,7 @@ export default function AdminLayout() {
       {/* ===== شريط تنقل سفلي (الموبايل) ===== */}
       <nav className="glass-header fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="flex items-center justify-around">
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.slice(0, 5).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

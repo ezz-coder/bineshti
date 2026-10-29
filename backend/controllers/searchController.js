@@ -25,6 +25,15 @@ const SEARCH_COLUMNS = {
     'CAST(rooms AS TEXT)',
     'type',
   ],
+  houses: [
+    'mainTitle',
+    'detailedAddress',
+    'description',
+    'CAST(price AS TEXT)',
+    'CAST(area AS TEXT)',
+    'CAST(rooms AS TEXT)',
+    'type',
+  ],
   lands: [
     'mainTitle',
     'detailedAddress',
@@ -38,6 +47,7 @@ const SEARCH_COLUMNS = {
 const TABLE_CATEGORY = {
   apartments: 'apartment',
   villas: 'villa',
+  houses: 'house',
   lands: 'land',
 };
 
@@ -80,7 +90,7 @@ function buildOrCondition(columns, value, startIndex) {
 
 // تنفيذ البحث في الجداول الثلاثة مع دمج شروط متعددة ودعم pagination
 async function runSearch(tables, joiner, words, page, limit) {
-  const result = { apartments: [], villas: [], lands: [] };
+  const result = { apartments: [], villas: [], houses: [], lands: [] };
   let total = 0;
 
   for (const table of tables) {
@@ -124,7 +134,7 @@ async function runSearch(tables, joiner, words, page, limit) {
 }
 
 function countResults(data) {
-  return data.apartments.length + data.villas.length + data.lands.length;
+  return data.apartments.length + data.villas.length + data.houses.length + data.lands.length;
 }
 
 // GET /api/search?q=keyword - البحث الشامل في كل الحقول
@@ -137,12 +147,12 @@ async function search(req, res) {
     if (!keyword) {
       return res.status(200).json({
         success: true,
-        data: { apartments: [], villas: [], lands: [] },
+        data: { apartments: [], villas: [], houses: [], lands: [] },
         pagination: { page, limit, total: 0, totalPages: 0 },
       });
     }
 
-    const tables = ['apartments', 'villas', 'lands'];
+    const tables = ['apartments', 'villas', 'houses', 'lands'];
     const words = keyword.split(/\s+/).filter(Boolean);
 
     // المحاولة 1: البحث بالعبارة كاملة في كل الحقول (OR بين الحقول)

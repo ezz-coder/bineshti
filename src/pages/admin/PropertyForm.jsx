@@ -181,8 +181,8 @@ export default function PropertyForm({ category }) {
 
       // حقول خاصة بالنوع (تُرسل فقط إن كانت ذات صلة وغير فارغة)
       if (category === 'apartment' && form.floors !== '') fd.append('floors', form.floors);
-      if ((category === 'villa' || category === 'land') && form.area !== '') fd.append('area', form.area);
-      if (category === 'villa' && form.rooms !== '') fd.append('rooms', form.rooms);
+      if ((category === 'villa' || category === 'house' || category === 'land') && form.area !== '') fd.append('area', form.area);
+      if ((category === 'villa' || category === 'house') && form.rooms !== '') fd.append('rooms', form.rooms);
 
       // الصور القديمة التي أبقيها المستخدم (تُعيد بناء قائمة الصور في الخادم)
       fd.append('existingImages', JSON.stringify(existingImages));
@@ -213,7 +213,7 @@ export default function PropertyForm({ category }) {
 
       if (!isEdit) {
         // بعد الإضافة نعود لقائمة القسم
-        setTimeout(() => navigate(`/admin/${category === 'land' ? 'lands' : category === 'villa' ? 'villas' : 'apartments'}`, { replace: true }), 700);
+        setTimeout(() => navigate(categoryInfo.adminEndpoint, { replace: true }), 700);
       }
     } catch (err) {
       setError(getApiErrorMessage(err, 'تعذّر حفظ العقار. تأكد من صحة البيانات.'));
@@ -296,7 +296,7 @@ export default function PropertyForm({ category }) {
       </div>
 
       {/* الحقول الخاصة بكل نوع (تظهر فقط عند الصلة) */}
-      {(category === 'apartment' || category === 'villa' || category === 'land') && (
+      {(category === 'apartment' || category === 'villa' || category === 'house' || category === 'land') && (
         <div className="grid grid-cols-1 gap-4 rounded-card border border-border bg-card p-5 shadow-card sm:grid-cols-2">
           {category === 'apartment' && (
             <TextField
@@ -309,7 +309,7 @@ export default function PropertyForm({ category }) {
               placeholder="اتركه فارغاً إن لم ينطبق"
             />
           )}
-          {(category === 'villa' || category === 'land') && (
+          {(category === 'villa' || category === 'house' || category === 'land') && (
             <TextField
               label="المساحة (م²) (اختياري)"
               name="area"
@@ -320,7 +320,7 @@ export default function PropertyForm({ category }) {
               placeholder="اتركه فارغاً إن لم ينطبق"
             />
           )}
-          {category === 'villa' && (
+          {(category === 'villa' || category === 'house') && (
             <TextField
               label="عدد الغرف (اختياري)"
               name="rooms"

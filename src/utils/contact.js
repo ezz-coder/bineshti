@@ -48,7 +48,7 @@ export function buildWhatsappHref(whatsappPhone, message) {
  * Conditional Rendering: الحقول الفارغة لا تظهر في الرسالة.
  */
 export function buildPropertyMessage(property, category) {
-  const categoryLabels = { apartment: 'شقة', villa: 'فيلا', land: 'أرض' };
+  const categoryLabels = { apartment: 'شقة', villa: 'فيلا', house: 'بيت', land: 'أرض' };
   const lines = ['مرحباً، أود الاستفسار عن هذا العقار:'];
 
   const kind = categoryLabels[category];
@@ -64,10 +64,10 @@ export function buildPropertyMessage(property, category) {
   if (category === 'apartment' && Number(property?.floors) > 0) {
     lines.push(`عدد الطوابق: ${property.floors}`);
   }
-  if ((category === 'villa' || category === 'land') && Number(property?.area) > 0) {
+  if ((category === 'villa' || category === 'house' || category === 'land') && Number(property?.area) > 0) {
     lines.push(`المساحة: ${property.area} م²`);
   }
-  if (category === 'villa' && Number(property?.rooms) > 0) {
+  if ((category === 'villa' || category === 'house') && Number(property?.rooms) > 0) {
     lines.push(`عدد الغرف: ${property.rooms}`);
   }
   return lines.join('\n');

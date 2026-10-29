@@ -57,6 +57,28 @@ const villaValidation = [
 ];
 
 /**
+ * قواعد التحقق للبيوت
+ * نفس حقول الفلل تماماً: area و rooms اختياريان — يُقبلان فارغين ويُخزَّنان 0.
+ */
+const houseValidation = [
+  body('type')
+    .isIn(PROPERTY_TYPES)
+    .withMessage(`النوع يجب أن يكون أحد القيم: ${PROPERTY_TYPES.join(' أو ')}.`),
+  body('mainTitle').trim().notEmpty().withMessage('اسم المنطقة مطلوب.'),
+  body('detailedAddress').trim().notEmpty().withMessage('العنوان التفصيلي مطلوب.'),
+  body('description').optional().trim(),
+  body('price').isInt({ min: 0 }).withMessage('السعر يجب أن يكون رقماً صحيحاً موجباً.'),
+  body('area')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 0 })
+    .withMessage('المساحة يجب أن تكون رقماً صحيحاً.'),
+  body('rooms')
+    .optional({ checkFalsy: true })
+    .isInt({ min: 0 })
+    .withMessage('عدد الغرف يجب أن يكون رقماً صحيحاً.'),
+];
+
+/**
  * قواعد التحقق للأراضي
  * ملاحظة: area اختياري — يُقبل فارغاً ويُخزَّن 0.
  */
@@ -128,6 +150,7 @@ module.exports = {
   handleValidation,
   apartmentValidation,
   villaValidation,
+  houseValidation,
   landValidation,
   settingsValidation,
   loginValidation,

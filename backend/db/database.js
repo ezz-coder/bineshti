@@ -190,6 +190,21 @@ async function initializeTablesPg() {
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   );`);
+  await query(`CREATE TABLE IF NOT EXISTS houses (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(20) NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
+    mainTitle VARCHAR(255) NOT NULL,
+    detailedAddress TEXT NOT NULL,
+    description TEXT,
+    price INTEGER NOT NULL,
+    area INTEGER NOT NULL,
+    rooms INTEGER NOT NULL,
+    images TEXT NOT NULL DEFAULT '[]',
+    isFeatured BOOLEAN NOT NULL DEFAULT FALSE,
+    isHidden BOOLEAN NOT NULL DEFAULT FALSE,
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );`);
   await query(`CREATE TABLE IF NOT EXISTS lands (
     id SERIAL PRIMARY KEY,
     type VARCHAR(20) NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
@@ -212,6 +227,10 @@ async function initializeTablesPg() {
   await query(`CREATE INDEX IF NOT EXISTS idx_villas_featured ON villas(isFeatured);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_villas_hidden ON villas(isHidden);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_villas_created ON villas(createdAt DESC);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_houses_type ON houses(type);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_houses_featured ON houses(isFeatured);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_houses_hidden ON houses(isHidden);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_houses_created ON houses(createdAt DESC);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_type ON lands(type);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_featured ON lands(isFeatured);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_hidden ON lands(isHidden);`);
@@ -237,6 +256,23 @@ function initializeTablesSqlite() {
   `);
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS villas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
+      mainTitle TEXT NOT NULL,
+      detailedAddress TEXT NOT NULL,
+      description TEXT,
+      price INTEGER NOT NULL,
+      area INTEGER NOT NULL,
+      rooms INTEGER NOT NULL,
+      images TEXT NOT NULL DEFAULT '[]',
+      isFeatured INTEGER NOT NULL DEFAULT 0,
+      isHidden INTEGER NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS houses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL CHECK(type IN ('إيجار', 'تمليك')),
       mainTitle TEXT NOT NULL,
@@ -307,6 +343,10 @@ function initializeTablesSqlite() {
     CREATE INDEX IF NOT EXISTS idx_villas_featured ON villas(isFeatured);
     CREATE INDEX IF NOT EXISTS idx_villas_hidden ON villas(isHidden);
     CREATE INDEX IF NOT EXISTS idx_villas_created ON villas(createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_houses_type ON houses(type);
+    CREATE INDEX IF NOT EXISTS idx_houses_featured ON houses(isFeatured);
+    CREATE INDEX IF NOT EXISTS idx_houses_hidden ON houses(isHidden);
+    CREATE INDEX IF NOT EXISTS idx_houses_created ON houses(createdAt DESC);
     CREATE INDEX IF NOT EXISTS idx_lands_type ON lands(type);
     CREATE INDEX IF NOT EXISTS idx_lands_featured ON lands(isFeatured);
     CREATE INDEX IF NOT EXISTS idx_lands_hidden ON lands(isHidden);
@@ -314,7 +354,7 @@ function initializeTablesSqlite() {
   `);
 
   // ترقية تدريجية آمنة للجداول القديمة
-  ['apartments', 'villas', 'lands'].forEach((table) => {
+  ['apartments', 'villas', 'houses', 'lands'].forEach((table) => {
     const columns = sqlite.pragma(`table_info(${table})`);
     if (!columns.some((col) => col.name === 'isHidden')) {
       sqlite.exec(`ALTER TABLE ${table} ADD COLUMN isHidden INTEGER NOT NULL DEFAULT 0`);

@@ -95,6 +95,17 @@ export function IconVilla({ className = 'h-6 w-6' }) {
   );
 }
 
+export function IconHouse({ className = 'h-6 w-6' }) {
+  // يمثّل قسم البيوت (منزل بسقف مائل ونافذة)
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+      <path d="M9 21v-5h6v5" />
+      <path d="M9.5 12h5" />
+    </svg>
+  );
+}
+
 export function IconLand({ className = 'h-6 w-6' }) {
   return (
     <svg {...base} className={className}>

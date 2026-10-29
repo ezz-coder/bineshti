@@ -6,6 +6,7 @@ import ToggleSwitch from '../../components/ToggleSwitch';
 import {
   IconBuilding,
   IconEyeOff,
+  IconHouse,
   IconLand,
   IconPencil,
   IconPlus,
@@ -20,6 +21,7 @@ import { CATEGORIES, resolveImageUrl } from '../../utils/constants';
 const CATEGORY_META = {
   apartment: { Icon: IconBuilding, adminPath: '/admin/apartments', newPath: '/admin/apartments/new' },
   villa: { Icon: IconVilla, adminPath: '/admin/villas', newPath: '/admin/villas/new' },
+  house: { Icon: IconHouse, adminPath: '/admin/houses', newPath: '/admin/houses/new' },
   land: { Icon: IconLand, adminPath: '/admin/lands', newPath: '/admin/lands/new' },
 };
 

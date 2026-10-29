@@ -5,6 +5,7 @@ const {
   handleValidation,
   apartmentValidation,
   villaValidation,
+  houseValidation,
   landValidation,
   settingsValidation,
   loginValidation,
@@ -15,6 +16,7 @@ const {
 const { login, updateAdminCredentials } = require('../controllers/adminController');
 const apartmentController = require('../controllers/apartmentController');
 const villaController = require('../controllers/villaController');
+const houseController = require('../controllers/houseController');
 const landController = require('../controllers/landController');
 const { getSettings, updateSettings } = require('../controllers/settingsController');
 
@@ -106,6 +108,46 @@ router.put(
 
 // DELETE /api/admin/villas/:id - حذف فيلا
 router.delete('/villas/:id', villaController.deleteVilla);
+
+// ===== البيوت =====
+// POST /api/admin/houses - إضافة بيت جديد
+router.post(
+  '/houses',
+  upload.array('images'),
+  processImages,
+  houseValidation,
+  handleValidation,
+  houseController.createHouse
+);
+
+// PUT /api/admin/houses/:id - تعديل بيت
+router.put(
+  '/houses/:id',
+  upload.array('images'),
+  processImages,
+  houseValidation,
+  handleValidation,
+  houseController.updateHouse
+);
+
+// PUT /api/admin/houses/:id/featured - تغيير حالة المميز
+router.put(
+  '/houses/:id/featured',
+  featuredValidation,
+  handleValidation,
+  houseController.setHouseFeatured
+);
+
+// PUT /api/admin/houses/:id/hidden - تغيير حالة الإخفاء
+router.put(
+  '/houses/:id/hidden',
+  hiddenValidation,
+  handleValidation,
+  houseController.setHouseHidden
+);
+
+// DELETE /api/admin/houses/:id - حذف بيت
+router.delete('/houses/:id', houseController.deleteHouse);
 
 // ===== الأراضي =====
 // POST /api/admin/lands - إضافة أرض جديدة

@@ -1,13 +1,14 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-import { IconBuilding, IconHome, IconInfo, IconLand, IconVilla } from './icons';
+import { IconBuilding, IconHome, IconHouse, IconInfo, IconLand, IconVilla } from './icons';
 
 // عناصر الـ Dock من اليمين إلى اليسار.
 const ITEMS = [
   { to: '/', labelKey: 'nav.home', Icon: IconHome, end: true },
   { to: '/apartments', labelKey: 'nav.apartments', Icon: IconBuilding },
   { to: '/villas', labelKey: 'nav.villas', Icon: IconVilla },
+  { to: '/houses', labelKey: 'nav.houses', Icon: IconHouse },
   { to: '/lands', labelKey: 'nav.lands', Icon: IconLand },
   { to: '/about', labelKey: 'nav.about', Icon: IconInfo },
 ];

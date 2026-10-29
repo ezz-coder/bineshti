@@ -16,6 +16,7 @@ import { resolveImageUrl } from '../utils/constants';
 const CATEGORY_LABEL_MAP = {
   apartment: 'شقة',
   villa: 'فيلا',
+  house: 'بيت',
   land: 'أرض فارغة',
 };
 
@@ -139,8 +140,8 @@ function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
   // هل يوجد أي تفصيل إضافي لعرضه؟ (لتجنّب ترك فراغ)
   const hasMetaChips =
     (category === 'apartment' && hasPositiveNumber(floors)) ||
-    ((category === 'villa' || category === 'land') && hasPositiveNumber(area)) ||
-    (category === 'villa' && hasPositiveNumber(rooms));
+    ((category === 'villa' || category === 'house' || category === 'land') && hasPositiveNumber(area)) ||
+    ((category === 'villa' || category === 'house') && hasPositiveNumber(rooms));
 
   return (
     <article className="glass-effect flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-card-hover">
@@ -188,10 +189,10 @@ function PropertyCard({ property, category, contactPhone, whatsappPhone }) {
             {category === 'apartment' && hasPositiveNumber(floors) && (
               <MetaChip Icon={IconLayers}>{floors} طوابق</MetaChip>
             )}
-            {category === 'villa' && hasPositiveNumber(area) && (
+            {(category === 'villa' || category === 'house') && hasPositiveNumber(area) && (
               <MetaChip Icon={IconRuler}>{area} م²</MetaChip>
             )}
-            {category === 'villa' && hasPositiveNumber(rooms) && (
+            {(category === 'villa' || category === 'house') && hasPositiveNumber(rooms) && (
               <MetaChip Icon={IconBed}>{rooms} غرف</MetaChip>
             )}
             {category === 'land' && hasPositiveNumber(area) && (

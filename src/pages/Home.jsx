@@ -99,10 +99,11 @@ export default function Home() {
     async function load() {
       setLoading(true);
       try {
-        const [featuredRes, aptRes, villaRes, landRes, settingsRes] = await Promise.all([
+        const [featuredRes, aptRes, villaRes, houseRes, landRes, settingsRes] = await Promise.all([
           api.get('/featured'),
           api.get('/apartments'),
           api.get('/villas'),
+          api.get('/houses'),
           api.get('/lands'),
           api.get('/settings'),
         ]);
@@ -118,22 +119,24 @@ export default function Home() {
           setWhatsapp(settingsData.whatsappPhone.trim());
         }
 
-        // المميزة: دمج الثلاثة أقسام مع الإشارة للقسم
+        // المميزة: دمج الأقسام مع الإشارة للقسم
         const f = featuredRes?.data?.data || {};
         const featuredList = [
           ...tagCategory(normalizeList(f.apartments), 'apartment'),
           ...tagCategory(normalizeList(f.villas), 'villa'),
+          ...tagCategory(normalizeList(f.houses), 'house'),
           ...tagCategory(normalizeList(f.lands), 'land'),
         ];
         setFeatured(featuredList);
 
-        // الأحدث: دمج آخر عقارات الثلاثة أقسام وترتيبها زمنياً
+        // الأحدث: دمج آخر عقارات الأقسام وترتيبها زمنياً
         // نستبعد العقارات المميزة (isFeatured) لأنها معروضة بالفعل في قسم "العناصر المميزة"
         // حتى لا تتكرر في قسم "أحدث العقارات".
         const recentList = mergeAndSort(
           [
             [normalizeList(aptRes?.data?.data).filter((item) => !item.isFeatured), 'apartment'],
             [normalizeList(villaRes?.data?.data).filter((item) => !item.isFeatured), 'villa'],
+            [normalizeList(houseRes?.data?.data).filter((item) => !item.isFeatured), 'house'],
             [normalizeList(landRes?.data?.data).filter((item) => !item.isFeatured), 'land'],
           ],
           8,

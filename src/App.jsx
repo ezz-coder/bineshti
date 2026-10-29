@@ -7,6 +7,7 @@ import MainLayout from './layouts/MainLayout';
 import About from './pages/About';
 import Apartments from './pages/Apartments';
 import Home from './pages/Home';
+import Houses from './pages/Houses';
 import Lands from './pages/Lands';
 import Placeholder from './pages/Placeholder';
 import PropertyDetails from './pages/PropertyDetails';
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/apartments" element={<Apartments />} />
           <Route path="/villas" element={<Villas />} />
+          <Route path="/houses" element={<Houses />} />
           <Route path="/lands" element={<Lands />} />
           <Route path="/about" element={<About />} />
           <Route path="/search" element={<SearchResults />} />
@@ -38,6 +40,7 @@ export default function App() {
           {/* صفحات تفاصيل العقار */}
           <Route path="/apartment/:id" element={<PropertyDetails category="apartment" />} />
           <Route path="/villa/:id" element={<PropertyDetails category="villa" />} />
+          <Route path="/house/:id" element={<PropertyDetails category="house" />} />
           <Route path="/land/:id" element={<PropertyDetails category="land" />} />
         </Route>
 
@@ -87,6 +90,25 @@ export default function App() {
             element={
               <ErrorBoundary>
                 <PropertyForm category="villa" />
+              </ErrorBoundary>
+            }
+          />
+
+          {/* إدارة البيوت */}
+          <Route path="houses" element={<AdminProperties category="house" />} />
+          <Route
+            path="houses/new"
+            element={
+              <ErrorBoundary>
+                <PropertyForm category="house" />
+              </ErrorBoundary>
+            }
+          />
+          <Route
+            path="houses/:id/edit"
+            element={
+              <ErrorBoundary>
+                <PropertyForm category="house" />
               </ErrorBoundary>
             }
           />
