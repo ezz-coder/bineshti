@@ -51,11 +51,11 @@ const TABLE_CATEGORY = {
   lands: 'land',
 };
 
-// تحويل نص JSON الخاص بالصور إلى مصفوفة (مثل النماذج)
-function parseImages(images) {
-  if (!images) return [];
+// تحويل نص JSON الخاص بالصور/الفيديوهات إلى مصفوفة (مثل النماذج)
+function parseJsonArray(value) {
+  if (!value) return [];
   try {
-    const parsed = JSON.parse(images);
+    const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     return [];
@@ -66,7 +66,8 @@ function parseImages(images) {
 function formatRow(table, row) {
   return {
     ...row,
-    images: parseImages(row.images),
+    images: parseJsonArray(row.images),
+    videos: parseJsonArray(row.videos),
     isFeatured: Boolean(row.isFeatured),
     isHidden: Boolean(row.isHidden),
     category: TABLE_CATEGORY[table],

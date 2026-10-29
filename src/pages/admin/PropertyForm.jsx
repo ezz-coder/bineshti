@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { ErrorBanner, SelectField, SuccessBanner, TextAreaField, TextField } from '../../components/admin/FormFields';
 import ToggleSwitch from '../../components/ToggleSwitch';
-import { IconArrowLeft, IconCamera, IconClose } from '../../components/icons';
+import { IconArrowLeft, IconCamera, IconClose, IconPlus } from '../../components/icons';
 import { adminApi, getApiErrorMessage } from '../../services/api';
 import { CATEGORIES, resolveImageUrl } from '../../utils/constants';
 
@@ -56,6 +56,9 @@ export default function PropertyForm({ category }) {
   const [newImages, setNewImages] = useState([]); // File[] مع معرّف محلي للمعاينة
   const [previewUrls, setPreviewUrls] = useState({}); // روابط معاينة مؤقتة للصور الجديدة (key => objectURL)
 
+  // ===== حالة روابط الفيديو (رابط مباشر أو يوتيوب) =====
+  const [videoUrls, setVideoUrls] = useState([]);
+
   const fileInputRef = useRef(null);
 
   // جلب بيانات العقار عند التعديل (بدون حذف أي صورة تلقائياً)
@@ -89,6 +92,8 @@ export default function PropertyForm({ category }) {
           });
           // نملأ existingImages بكل الصور الحالية — لا نحذف شيئاً تلقائياً.
           setExistingImages(Array.isArray(data.images) ? data.images : []);
+          // روابط الفيديو الحالية (إن وُجدت)
+          setVideoUrls(Array.isArray(data.videos) ? data.videos : []);
         }
       } catch (err) {
         if (active) setError(getApiErrorMessage(err, 'تعذّر تحميل بيانات العقار.'));
@@ -162,6 +167,23 @@ export default function PropertyForm({ category }) {
     });
   }
 
+  // ===== التعامل مع روابط الفيديو =====
+
+  // إضافة حقل رابط جديد (فارغ) أسفل القائمة
+  function addVideoField() {
+    setVideoUrls((prev) => [...prev, '']);
+  }
+
+  // تحديث قيمة رابط في موضعه
+  function updateVideoField(index, value) {
+    setVideoUrls((prev) => prev.map((url, i) => (i === index ? value : url)));
+  }
+
+  // حذف حقل رابط
+  function removeVideoField(index) {
+    setVideoUrls((prev) => prev.filter((_, i) => i !== index));
+  }
+
   // ===== الإرسال: بناء FormData بالحقول النصية + الصور =====
   async function handleSubmit(e) {
     e.preventDefault();
@@ -190,6 +212,9 @@ export default function PropertyForm({ category }) {
       fd.append('imagesToDelete', JSON.stringify(imagesToDelete));
       // ملفات الصور الجديدة
       newImages.forEach((item) => fd.append('images', item.file));
+
+      // روابط الفيديو (تُرسل كسلسلة JSON، مع تجاهل الفراغات)
+      fd.append('videos', JSON.stringify(videoUrls.map((v) => v.trim()).filter((v) => v !== '')));
 
       const url = isEdit ? `${adminEndpoint}/${editingId}` : adminEndpoint;
       console.log('[PropertyForm] إرسال النموذج:', {
@@ -421,6 +446,48 @@ export default function PropertyForm({ category }) {
             إضافة صور جديدة (يمكن اختيار أكثر من صورة)
           </label>
         </div>
+      </div>
+
+      {/* ===== روابط الفيديو (اختياري) ===== */}
+      <div className="space-y-4 rounded-card border border-border bg-card p-5 shadow-card">
+        <div>
+          <h2 className="text-sm font-bold text-dark-gray">الفيديوهات (اختياري)</h2>
+          <p className="mt-1 text-xs text-dark-gray/55">
+            الصق رابط الفيديو (يوتيوب أو رابط ملف مباشر مثل Cloudinary). تظهر الفيديوهات أولاً في معرض العقار.
+          </p>
+        </div>
+
+        {videoUrls.map((url, index) => (
+          <div key={index} className="flex items-end gap-2">
+            <div className="flex-1">
+              <TextField
+                label={`رابط الفيديو ${index + 1}`}
+                name={`video-${index}`}
+                value={url}
+                onChange={(e) => updateVideoField(index, e.target.value)}
+                placeholder="https://youtu.be/… أو https://res.cloudinary.com/…/video.mp4"
+                dir="ltr"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => removeVideoField(index)}
+              aria-label="حذف هذا الرابط"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-soft-beige text-red-500 transition-all duration-300 hover:bg-red-500 hover:text-white"
+            >
+              <IconClose className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={addVideoField}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-gray/15 bg-soft-beige px-4 py-4 text-sm font-semibold text-dark-gray/70 transition-all duration-300 hover:border-accent/40 hover:bg-soft-blue hover:text-accent"
+        >
+          <IconPlus className="h-5 w-5" />
+          إضافة رابط جديد
+        </button>
       </div>
 
       {/* الحالات (مميز / مخفي) */}

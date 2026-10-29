@@ -1,5 +1,5 @@
 const apartmentModel = require('../models/apartmentModel');
-const { buildImagePaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
+const { buildImagePaths, buildVideoPaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
 
 /**
  * تحويل آمن إلى عدد صحيح، وإرجاع 0 عند الفراغ أو القيم غير الرقمية
@@ -43,6 +43,7 @@ async function getApartmentById(req, res) {
 // POST /api/admin/apartments - إضافة شقة جديدة
 async function createApartment(req, res) {
   const images = buildImagePaths(req);
+  const videos = buildVideoPaths(req);
   const apartment = await apartmentModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
@@ -51,6 +52,7 @@ async function createApartment(req, res) {
     price: parseInt(req.body.price, 10),
     floors: safeInt(req.body.floors),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });
@@ -65,6 +67,8 @@ async function updateApartment(req, res) {
   }
 
   const images = buildImagePaths(req);
+  // عدم إرسال حقل videos يعني الإبقاء على الفيديوهات الحالية (حماية من عملاء قديمة مخزّنة)
+  const videos = req.body.videos === undefined ? existing.videos : buildVideoPaths(req);
 
   // حذف الصور التي أزيلت من التخزين
   const imagesToDelete = getImagesToDelete(existing.images, images);
@@ -78,6 +82,7 @@ async function updateApartment(req, res) {
     price: parseInt(req.body.price, 10),
     floors: safeInt(req.body.floors),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });

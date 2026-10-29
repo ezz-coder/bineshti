@@ -30,11 +30,73 @@ function hasText(value) {
   return typeof value === 'string' && value.trim() !== '';
 }
 
-// ===== معرض صور كبير (scroll-snap) =====
+// ===== معرض الوسائط الكبير (الفيديوهات أولاً ثم الصور — scroll-snap) =====
 
-function DetailsGallery({ images, alt }) {
+// تحويل روابط يوتيوب إلى صيغة تشغيل مدمجة داخل الصفحة (بدون مغادرتها).
+// تُرجع '' لأي رابط آخر (روابط الملفات المباشرة تُشغَّل بوسم video).
+function toYoutubeEmbedUrl(url) {
+  if (typeof url !== 'string' || url.trim() === '') return '';
+  try {
+    const parsed = new URL(url.trim());
+    const host = parsed.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      const id = parsed.pathname.split('/').filter(Boolean)[0];
+      return id ? `https://www.youtube.com/embed/${id}` : '';
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com') {
+      if (parsed.pathname === '/watch') {
+        const id = parsed.searchParams.get('v');
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+      const [section, id] = parsed.pathname.split('/').filter(Boolean);
+      if (section === 'embed' || section === 'shorts' || section === 'live') {
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+    }
+
+    return '';
+  } catch (e) {
+    return '';
+  }
+}
+
+// مشغّل فيديو واحد: يوتيوب (iframe مدمج) أو ملف مباشر (video)
+function GalleryVideo({ url }) {
+  const embedUrl = toYoutubeEmbedUrl(url);
+
+  if (embedUrl) {
+    return (
+      <iframe
+        src={embedUrl}
+        title="فيديو العقار"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="h-full w-full border-0"
+      />
+    );
+  }
+
+  return (
+    <video
+      src={url}
+      controls
+      preload="metadata"
+      playsInline
+      className="h-full w-full bg-black object-contain"
+    />
+  );
+}
+
+function DetailsGallery({ videos, images, alt }) {
+  const items = [
+    ...videos.map((url) => ({ kind: 'video', url })),
+    ...images.map((url) => ({ kind: 'image', url })),
+  ];
   const [index, setIndex] = useState(0);
-  const total = images.length;
+  const total = items.length;
 
   const handleScroll = (e) => {
     const el = e.currentTarget;
@@ -57,22 +119,24 @@ function DetailsGallery({ images, alt }) {
         onScroll={handleScroll}
         className="no-scrollbar flex h-full snap-x snap-mandatory overflow-x-auto"
       >
-        {images.map((img, i) => {
-          const imageUrl = resolveImageUrl(img);
-          return (
-            <img
-              key={i}
-              src={imageUrl}
-              srcSet={`${imageUrl}?w=400 400w, ${imageUrl}?w=800 800w`}
-              sizes="(max-width: 640px) 400px, 800px"
-              alt={`${alt} - صورة ${i + 1}`}
-              loading="lazy"
-              decoding="async"
-              fetchpriority="low"
-              className="h-full w-full shrink-0 snap-center object-cover"
-            />
-          );
-        })}
+        {items.map((item, i) => (
+          <div key={i} className="h-full w-full shrink-0 snap-center">
+            {item.kind === 'video' ? (
+              <GalleryVideo url={item.url} />
+            ) : (
+              <img
+                src={resolveImageUrl(item.url)}
+                srcSet={`${resolveImageUrl(item.url)}?w=400 400w, ${resolveImageUrl(item.url)}?w=800 800w`}
+                sizes="(max-width: 640px) 400px, 800px"
+                alt={`${alt} - صورة ${i + 1}`}
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+        ))}
       </div>
       <div className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-dark-gray/70 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
         {index + 1}/{total}
@@ -208,6 +272,7 @@ export default function PropertyDetails({ category }) {
   // ===== العرض =====
   const { mainTitle, detailedAddress, description, price, floors, area, rooms } = property;
   const imagesList = Array.isArray(property.images) ? property.images : [];
+  const videosList = Array.isArray(property.videos) ? property.videos : [];
 
   // تجميع التفاصيل الإضافية المتاحة فقط (بدون فراغات)
   const detailRows = [];
@@ -246,7 +311,7 @@ export default function PropertyDetails({ category }) {
         </Link>
 
         <div className="mt-4 overflow-hidden rounded-2xl shadow-sm ring-1 ring-dark-gray/5">
-          <DetailsGallery images={imagesList} alt={mainTitle || 'عقار'} />
+          <DetailsGallery videos={videosList} images={imagesList} alt={mainTitle || 'عقار'} />
         </div>
 
         <div className="mt-6">

@@ -1,5 +1,5 @@
 const landModel = require('../models/landModel');
-const { buildImagePaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
+const { buildImagePaths, buildVideoPaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
 
 /**
  * تحويل آمن إلى عدد صحيح، وإرجاع 0 عند الفراغ أو القيم غير الرقمية
@@ -42,6 +42,7 @@ async function getLandById(req, res) {
 // POST /api/admin/lands - إضافة أرض جديدة
 async function createLand(req, res) {
   const images = buildImagePaths(req);
+  const videos = buildVideoPaths(req);
   const land = await landModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
@@ -50,6 +51,7 @@ async function createLand(req, res) {
     price: parseInt(req.body.price, 10),
     area: safeInt(req.body.area),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });
@@ -64,6 +66,7 @@ async function updateLand(req, res) {
   }
 
   const images = buildImagePaths(req);
+  const videos = req.body.videos === undefined ? existing.videos : buildVideoPaths(req);
 
   const imagesToDelete = getImagesToDelete(existing.images, images);
   deleteImageFiles(imagesToDelete);
@@ -76,6 +79,7 @@ async function updateLand(req, res) {
     price: parseInt(req.body.price, 10),
     area: safeInt(req.body.area),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });

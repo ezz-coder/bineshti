@@ -170,6 +170,7 @@ async function initializeTablesPg() {
     price INTEGER NOT NULL,
     floors INTEGER NOT NULL,
     images TEXT NOT NULL DEFAULT '[]',
+    videos TEXT NOT NULL DEFAULT '[]',
     isFeatured BOOLEAN NOT NULL DEFAULT FALSE,
     isHidden BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -185,6 +186,7 @@ async function initializeTablesPg() {
     area INTEGER NOT NULL,
     rooms INTEGER NOT NULL,
     images TEXT NOT NULL DEFAULT '[]',
+    videos TEXT NOT NULL DEFAULT '[]',
     isFeatured BOOLEAN NOT NULL DEFAULT FALSE,
     isHidden BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -200,6 +202,7 @@ async function initializeTablesPg() {
     area INTEGER NOT NULL,
     rooms INTEGER NOT NULL,
     images TEXT NOT NULL DEFAULT '[]',
+    videos TEXT NOT NULL DEFAULT '[]',
     isFeatured BOOLEAN NOT NULL DEFAULT FALSE,
     isHidden BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -214,6 +217,7 @@ async function initializeTablesPg() {
     price INTEGER NOT NULL,
     area INTEGER NOT NULL,
     images TEXT NOT NULL DEFAULT '[]',
+    videos TEXT NOT NULL DEFAULT '[]',
     isFeatured BOOLEAN NOT NULL DEFAULT FALSE,
     isHidden BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -235,6 +239,11 @@ async function initializeTablesPg() {
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_featured ON lands(isFeatured);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_hidden ON lands(isHidden);`);
   await query(`CREATE INDEX IF NOT EXISTS idx_lands_created ON lands(createdAt DESC);`);
+
+  // ترقية تدريجية آمنة للجداول القديمة: إضافة عمود الفيديوهات إن لم يكن موجوداً.
+  for (const table of ['apartments', 'villas', 'houses', 'lands']) {
+    await query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS videos TEXT NOT NULL DEFAULT '[]'`);
+  }
 }
 
 function initializeTablesSqlite() {
@@ -248,6 +257,7 @@ function initializeTablesSqlite() {
       price INTEGER NOT NULL,
       floors INTEGER NOT NULL,
       images TEXT NOT NULL DEFAULT '[]',
+      videos TEXT NOT NULL DEFAULT '[]',
       isFeatured INTEGER NOT NULL DEFAULT 0,
       isHidden INTEGER NOT NULL DEFAULT 0,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -265,6 +275,7 @@ function initializeTablesSqlite() {
       area INTEGER NOT NULL,
       rooms INTEGER NOT NULL,
       images TEXT NOT NULL DEFAULT '[]',
+      videos TEXT NOT NULL DEFAULT '[]',
       isFeatured INTEGER NOT NULL DEFAULT 0,
       isHidden INTEGER NOT NULL DEFAULT 0,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,6 +293,7 @@ function initializeTablesSqlite() {
       area INTEGER NOT NULL,
       rooms INTEGER NOT NULL,
       images TEXT NOT NULL DEFAULT '[]',
+      videos TEXT NOT NULL DEFAULT '[]',
       isFeatured INTEGER NOT NULL DEFAULT 0,
       isHidden INTEGER NOT NULL DEFAULT 0,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -298,6 +310,7 @@ function initializeTablesSqlite() {
       price INTEGER NOT NULL,
       area INTEGER NOT NULL,
       images TEXT NOT NULL DEFAULT '[]',
+      videos TEXT NOT NULL DEFAULT '[]',
       isFeatured INTEGER NOT NULL DEFAULT 0,
       isHidden INTEGER NOT NULL DEFAULT 0,
       createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -358,6 +371,9 @@ function initializeTablesSqlite() {
     const columns = sqlite.pragma(`table_info(${table})`);
     if (!columns.some((col) => col.name === 'isHidden')) {
       sqlite.exec(`ALTER TABLE ${table} ADD COLUMN isHidden INTEGER NOT NULL DEFAULT 0`);
+    }
+    if (!columns.some((col) => col.name === 'videos')) {
+      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN videos TEXT NOT NULL DEFAULT '[]'`);
     }
   });
   const settingsColumns = sqlite.pragma('table_info(settings)').map((col) => col.name);

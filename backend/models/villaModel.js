@@ -1,9 +1,9 @@
 const { query, get, run } = require('../db/database');
 
-function parseImages(images) {
-  if (!images) return [];
+function parseJsonArray(value) {
+  if (!value) return [];
   try {
-    const parsed = JSON.parse(images);
+    const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     return [];
@@ -21,7 +21,8 @@ function formatVilla(row) {
     price: row.price,
     area: row.area,
     rooms: row.rooms,
-    images: parseImages(row.images),
+    images: parseJsonArray(row.images),
+    videos: parseJsonArray(row.videos),
     isFeatured: Boolean(row.isFeatured),
     isHidden: Boolean(row.isHidden),
     createdAt: row.createdAt,
@@ -50,22 +51,24 @@ async function getById(id) {
 
 async function create(data) {
   const images = JSON.stringify(data.images || []);
+  const videos = JSON.stringify(data.videos || []);
   const rows = await query(
-    `INSERT INTO villas (type, mainTitle, detailedAddress, description, price, area, rooms, images, isFeatured, isHidden, createdAt, updatedAt)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `INSERT INTO villas (type, mainTitle, detailedAddress, description, price, area, rooms, images, videos, isFeatured, isHidden, createdAt, updatedAt)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
      RETURNING id`,
-    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, data.isFeatured ? true : false, data.isHidden ? true : false]
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, videos, data.isFeatured ? true : false, data.isHidden ? true : false]
   );
   return getById(rows[0].id);
 }
 
 async function update(id, data) {
   const images = JSON.stringify(data.images || []);
+  const videos = JSON.stringify(data.videos || []);
   await run(
     `UPDATE villas
-     SET type = $1, mainTitle = $2, detailedAddress = $3, description = $4, price = $5, area = $6, rooms = $7, images = $8, isFeatured = $9, isHidden = $10, updatedAt = CURRENT_TIMESTAMP
-     WHERE id = $11`,
-    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, data.isFeatured ? true : false, data.isHidden ? true : false, id]
+     SET type = $1, mainTitle = $2, detailedAddress = $3, description = $4, price = $5, area = $6, rooms = $7, images = $8, videos = $9, isFeatured = $10, isHidden = $11, updatedAt = CURRENT_TIMESTAMP
+     WHERE id = $12`,
+    [data.type, data.mainTitle, data.detailedAddress, data.description || null, data.price, data.area, data.rooms, images, videos, data.isFeatured ? true : false, data.isHidden ? true : false, id]
   );
   return getById(id);
 }

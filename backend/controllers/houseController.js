@@ -1,5 +1,5 @@
 const houseModel = require('../models/houseModel');
-const { buildImagePaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
+const { buildImagePaths, buildVideoPaths, deleteImageFiles, getImagesToDelete } = require('./imageHelper');
 
 /**
  * تحويل آمن إلى عدد صحيح، وإرجاع 0 عند الفراغ أو القيم غير الرقمية
@@ -42,6 +42,7 @@ async function getHouseById(req, res) {
 // POST /api/admin/houses - إضافة بيت جديد
 async function createHouse(req, res) {
   const images = buildImagePaths(req);
+  const videos = buildVideoPaths(req);
   const house = await houseModel.create({
     type: req.body.type,
     mainTitle: req.body.mainTitle,
@@ -51,6 +52,7 @@ async function createHouse(req, res) {
     area: safeInt(req.body.area),
     rooms: safeInt(req.body.rooms),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });
@@ -65,6 +67,7 @@ async function updateHouse(req, res) {
   }
 
   const images = buildImagePaths(req);
+  const videos = req.body.videos === undefined ? existing.videos : buildVideoPaths(req);
 
   const imagesToDelete = getImagesToDelete(existing.images, images);
   deleteImageFiles(imagesToDelete);
@@ -78,6 +81,7 @@ async function updateHouse(req, res) {
     area: safeInt(req.body.area),
     rooms: safeInt(req.body.rooms),
     images,
+    videos,
     isFeatured: req.body.isFeatured === true || req.body.isFeatured === 'true',
     isHidden: req.body.isHidden === true || req.body.isHidden === 'true',
   });

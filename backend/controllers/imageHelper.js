@@ -116,8 +116,35 @@ function getOptimizedImageUrl(originalPath) {
   return originalPath;
 }
 
+/**
+ * بناء قائمة روابط الفيديو من حقل videos المُرسل في الجسم (سلسلة JSON أو مصفوفة).
+ * تُقبل روابط http/https فقط (يوتيوب أو رابط ملف مباشر) لتفادي أي قيمة غير آمنة،
+ * وتُزال التكرارات والقيم الفارغة.
+ */
+function buildVideoPaths(req) {
+  let videos = req.body.videos;
+  if (!videos) return [];
+
+  if (typeof videos === 'string') {
+    try {
+      videos = JSON.parse(videos);
+    } catch (e) {
+      videos = [videos];
+    }
+  }
+  if (!Array.isArray(videos)) return [];
+
+  const cleaned = videos
+    .filter((v) => typeof v === 'string')
+    .map((v) => v.trim())
+    .filter((v) => /^https?:\/\//i.test(v));
+
+  return [...new Set(cleaned)];
+}
+
 module.exports = {
   buildImagePaths,
+  buildVideoPaths,
   deleteImageFiles,
   getImagesToDelete,
   getOptimizedImageUrl,
