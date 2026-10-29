@@ -349,6 +349,9 @@ async function seedInitialData() {
   }
   const adminCount = await get('SELECT COUNT(*) AS count FROM admin');
   if (Number(adminCount.count) === 0) {
+    if (!process.env.ADMIN_PASSWORD) {
+      console.warn('⚠️ لم يتم ضبط ADMIN_PASSWORD — سيُنشأ حساب المدير بكلمة المرور الافتراضية. اضبط المتغير فوراً وغيّر كلمة المرور.');
+    }
     const plainPassword = process.env.ADMIN_PASSWORD || 'Bn@2026!Secure#';
     const hashedPassword = bcrypt.hashSync(plainPassword, 10);
     await query(

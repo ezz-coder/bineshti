@@ -95,7 +95,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/version', (req, res) => {
   res.json({
     success: true,
-    build: '2026-10-18-uploads-v6',
+    build: '2026-10-29-hidden-fix-v7',
     loginFields: ['username', 'password'],
     loginEndpoint: 'POST /api/admin/login',
   });

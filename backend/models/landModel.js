@@ -89,7 +89,7 @@ async function getAllWithPagination(page, limit, type, includeHidden = false) {
   let rows;
   if (type) {
     rows = includeHidden
-      ? await query('SELECT * FROM lands WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset])
+      ? await query('SELECT * FROM lands WHERE type = $1 ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset])
       : await query('SELECT * FROM lands WHERE type = $1 AND isHidden = FALSE ORDER BY createdAt DESC LIMIT $2 OFFSET $3', [type, limit, offset]);
   } else {
     rows = includeHidden
@@ -99,9 +99,13 @@ async function getAllWithPagination(page, limit, type, includeHidden = false) {
 
   let countResult;
   if (type) {
-    countResult = await get('SELECT COUNT(*) AS total FROM lands WHERE type = $1 AND isHidden = FALSE', [type]);
+    countResult = includeHidden
+      ? await get('SELECT COUNT(*) AS total FROM lands WHERE type = $1', [type])
+      : await get('SELECT COUNT(*) AS total FROM lands WHERE type = $1 AND isHidden = FALSE', [type]);
   } else {
-    countResult = await get('SELECT COUNT(*) AS total FROM lands WHERE isHidden = FALSE');
+    countResult = includeHidden
+      ? await get('SELECT COUNT(*) AS total FROM lands')
+      : await get('SELECT COUNT(*) AS total FROM lands WHERE isHidden = FALSE');
   }
 
   const total = countResult.total;

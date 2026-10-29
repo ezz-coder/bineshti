@@ -24,7 +24,8 @@ function authenticate(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Benishaty_Dev_Secret_2026');
+    // لا يوجد مفتاح احتياطي ثابت: server.js يضمن توليد JWT_SECRET وحفظه عند الإقلاع.
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.admin = decoded; // تخزين بيانات المدير المفكوكة في الطلب
     next();
   } catch (error) {
@@ -39,4 +40,24 @@ function authenticate(req, res, next) {
   }
 }
 
-module.exports = { authenticate };
+/**
+ * وسيط اختياري: يفك التوكن إن وُجد ليُعرف الأدمن المسجّل (req.admin)،
+ * ولا يمنع الطلب إن غاب التوكن أو كان غير صالح — يُعامَل صاحبه كزائر عادي.
+ * يُستخدم في مسارات العرض العامة التي تعرض بيانات إضافية للأدمن فقط.
+ */
+function optionalAuthenticate(req, res, next) {
+  const authHeader = req.headers['authorization'];
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      if (token) req.admin = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      // توكن منتهي أو غير صالح: نكمل كزائر بدون صلاحيات
+    }
+  }
+
+  next();
+}
+
+module.exports = { authenticate, optionalAuthenticate };

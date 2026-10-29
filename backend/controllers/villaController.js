@@ -21,7 +21,8 @@ async function getAllVillas(req, res) {
   const { type, page, limit, includeHidden } = req.query;
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 12;
-  const includeHiddenBool = includeHidden === 'true';
+  // ?includeHidden=true يُحترم فقط لطلب موثّق كأدمن (لوحة التحكم)، حتى لا تُكشف الفلل المخفية للزوار.
+  const includeHiddenBool = includeHidden === 'true' && Boolean(req.admin);
 
   const result = await villaModel.getAllWithPagination(pageNum, limitNum, type, includeHiddenBool);
   res.status(200).json({ success: true, ...result });

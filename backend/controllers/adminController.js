@@ -57,7 +57,7 @@ async function login(req, res) {
     // إنشاء توكن JWT صالح لمدة 24 ساعة
     const token = jwt.sign(
       { id: admin.id, role: 'admin' },
-      process.env.JWT_SECRET || 'Benishaty_Dev_Secret_2026',
+      process.env.JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN_SECONDS }
     );
 
